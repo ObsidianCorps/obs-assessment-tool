@@ -10,6 +10,8 @@
   var pendingLogo = null;
   // Caches the brand colour chosen before Begin ('' = use default)
   var pendingBrandColor = '';
+  // Active domain in the questionnaire panel (module-local)
+  var activeDomainId = null;
 
   /* ── Core state helpers ──────────────────────────────────── */
 
@@ -240,6 +242,639 @@
       .replace(/-{2,}/g, '-')
       .replace(/^-|-$/g, '')
       .toLowerCase() || 'assessment';
+  }
+
+  /* ── Questionnaire rendering ────────────────────────────────── */
+
+  function getStatusCardClass(status) {
+    if (status === 'compliant')     return ' is-answered';
+    if (status === 'partial')       return ' is-partial';
+    if (status === 'non-compliant') return ' is-non-compliant';
+    if (status === 'na')            return ' is-na';
+    return '';
+  }
+
+  function renderQuestionnaire() {
+    if (!app.template || !app.assessment) return;
+    var domains = app.template.domains;
+    if (!domains || !domains.length) return;
+    // Ensure activeDomainId is a valid domain
+    var found = false;
+    for (var i = 0; i < domains.length; i++) {
+      if (domains[i].id === activeDomainId) { found = true; break; }
+    }
+    if (!found) activeDomainId = domains[0].id;
+    renderSidebar(domains);
+    renderDomainMain(activeDomainId);
+  }
+
+  function renderSidebar(domains) {
+    var list = document.getElementById('sidebar-domain-list');
+    if (!list) return;
+    while (list.firstChild) list.removeChild(list.firstChild);
+    var totalAnswered = 0, totalTotal = 0;
+    for (var i = 0; i < domains.length; i++) {
+      var d = domains[i];
+      var sc = OBS.scoring.domainScore(d, app.assessment);
+      totalAnswered += sc.answered;
+      totalTotal += sc.total;
+      var li = document.createElement('li');
+      li.className = 'sidebar-nav__item';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      var isActive = d.id === activeDomainId;
+      btn.className = 'sidebar-nav__link' + (isActive ? ' is-active' : '');
+      if (isActive) btn.setAttribute('aria-current', 'page');
+      var titleSpan = document.createElement('span');
+      titleSpan.className = 'sidebar-domain-title';
+      titleSpan.textContent = OBS.i18n.pick(d.title, app.lang);
+      var progSpan = document.createElement('span');
+      progSpan.className = 'sidebar-domain-prog';
+      progSpan.textContent = sc.answered + '/' + sc.total;
+      btn.appendChild(titleSpan);
+      btn.appendChild(progSpan);
+      (function (did) {
+        btn.addEventListener('click', function () {
+          activeDomainId = did;
+          renderQuestionnaire();
+        });
+      })(d.id);
+      li.appendChild(btn);
+      list.appendChild(li);
+    }
+    var pct = totalTotal > 0 ? Math.round((totalAnswered / totalTotal) * 100) : 0;
+    var pctEl = document.getElementById('sidebar-progress-pct');
+    var fillEl = document.getElementById('sidebar-progress-fill');
+    if (pctEl) pctEl.textContent = pct + '%';
+    if (fillEl) fillEl.style.width = pct + '%';
+  }
+
+  function renderDomainMain(domainId) {
+    var main = document.getElementById('questionnaire-main');
+    if (!main) return;
+    var domain = null;
+    for (var i = 0; i < app.template.domains.length; i++) {
+      if (app.template.domains[i].id === domainId) { domain = app.template.domains[i]; break; }
+    }
+    if (!domain) return;
+    while (main.firstChild) main.removeChild(main.firstChild);
+    var panel = document.createElement('div');
+    panel.className = 'domain-panel';
+    var h2 = document.createElement('h2');
+    h2.className = 'domain-title';
+    h2.textContent = OBS.i18n.pick(domain.title, app.lang);
+    panel.appendChild(h2);
+    var questions = domain.questions || [];
+    for (var qi = 0; qi < questions.length; qi++) {
+      panel.appendChild(buildQuestionCard(questions[qi], qi + 1));
+    }
+    var numSlots = typeof domain.customSlots === 'number' ? domain.customSlots : 2;
+    var customData = (app.assessment.customQuestions || {})[domainId] || [];
+    for (var ci = 0; ci < numSlots; ci++) {
+      panel.appendChild(buildCustomCard(domainId, ci, customData[ci] || {}));
+    }
+    panel.appendChild(buildNarrativeSection(domainId));
+    main.appendChild(panel);
+  }
+
+  function buildQuestionCard(q, num) {
+    var qid = q.id;
+    var ans = (app.assessment.answers || {})[qid] || {};
+    var status = ans.status || 'unanswered';
+    var rem = ans.remediation || {};
+    var card = document.createElement('div');
+    card.className = 'question-card' + getStatusCardClass(status);
+    // Meta row
+    var meta = document.createElement('div');
+    meta.className = 'question-card__meta';
+    var numSpan = document.createElement('span');
+    numSpan.className = 'question-card__number';
+    numSpan.textContent = num + '.';
+    meta.appendChild(numSpan);
+    var idBadge = document.createElement('span');
+    idBadge.className = 'question-card__id';
+    idBadge.textContent = qid;
+    meta.appendChild(idBadge);
+    if (q.critical) {
+      var crit = document.createElement('span');
+      crit.className = 'question-card__critical';
+      crit.textContent = 'Critical';
+      meta.appendChild(crit);
+    }
+    card.appendChild(meta);
+    // Question text
+    var textEl = document.createElement('p');
+    textEl.className = 'question-card__text';
+    textEl.textContent = OBS.i18n.pick(q.text, app.lang);
+    card.appendChild(textEl);
+    // Good practice collapsible
+    var gp = OBS.i18n.pick(q.goodPractice, app.lang);
+    if (Array.isArray(gp) && gp.length) {
+      var details = document.createElement('details');
+      details.className = 'good-practice';
+      var summary = document.createElement('summary');
+      summary.className = 'good-practice__summary';
+      summary.textContent = 'What good practice looks like';
+      details.appendChild(summary);
+      var gpUl = document.createElement('ul');
+      gpUl.className = 'good-practice__list';
+      for (var gi = 0; gi < gp.length; gi++) {
+        var gpLi = document.createElement('li');
+        gpLi.textContent = gp[gi];
+        gpUl.appendChild(gpLi);
+      }
+      details.appendChild(gpUl);
+      card.appendChild(details);
+    }
+    // Follow-up prompt
+    var fu = OBS.i18n.pick(q.followUp, app.lang);
+    if (fu) {
+      var fuEl = document.createElement('p');
+      fuEl.className = 'question-card__followup';
+      var fuStrong = document.createElement('strong');
+      fuStrong.textContent = 'Follow-up: ';
+      fuEl.appendChild(fuStrong);
+      fuEl.appendChild(document.createTextNode(fu));
+      card.appendChild(fuEl);
+    }
+    // Reference tags
+    appendRefTags(card, q.references);
+    // Status fieldset
+    card.appendChild(buildStatusFieldset(qid, status, { 'data-qid': qid }));
+    // Partial percent — conditional, shown only when status === 'partial'
+    var ppGrp = document.createElement('div');
+    ppGrp.className = 'form-group conditional-field';
+    if (status !== 'partial') ppGrp.setAttribute('hidden', '');
+    var ppLbl = document.createElement('label');
+    ppLbl.setAttribute('for', qid + '-pp');
+    ppLbl.textContent = 'Partial compliance (%)';
+    ppGrp.appendChild(ppLbl);
+    var ppInp = document.createElement('input');
+    ppInp.type = 'number'; ppInp.min = '0'; ppInp.max = '100';
+    ppInp.id = qid + '-pp';
+    ppInp.value = ans.partialPercent != null ? ans.partialPercent : '';
+    ppInp.setAttribute('data-qid', qid);
+    ppInp.setAttribute('data-field', 'partialPercent');
+    ppGrp.appendChild(ppInp);
+    card.appendChild(ppGrp);
+    // N/A reason — conditional, shown only when status === 'na'
+    var naGrp = document.createElement('div');
+    naGrp.className = 'form-group conditional-field';
+    if (status !== 'na') naGrp.setAttribute('hidden', '');
+    var naLbl = document.createElement('label');
+    naLbl.setAttribute('for', qid + '-na');
+    naLbl.textContent = 'Reason for N/A';
+    naGrp.appendChild(naLbl);
+    var naInp = document.createElement('input');
+    naInp.type = 'text';
+    naInp.id = qid + '-na';
+    naInp.value = ans.naReason || '';
+    naInp.setAttribute('data-qid', qid);
+    naInp.setAttribute('data-field', 'naReason');
+    naGrp.appendChild(naInp);
+    card.appendChild(naGrp);
+    // Evidence textarea
+    var evGrp = document.createElement('div');
+    evGrp.className = 'form-group';
+    var evLbl = document.createElement('label');
+    evLbl.setAttribute('for', qid + '-ev');
+    evLbl.textContent = 'Evidence / notes';
+    evGrp.appendChild(evLbl);
+    var evTa = document.createElement('textarea');
+    evTa.id = qid + '-ev';
+    evTa.rows = 3;
+    evTa.value = ans.evidence || '';
+    evTa.setAttribute('data-qid', qid);
+    evTa.setAttribute('data-field', 'evidence');
+    evGrp.appendChild(evTa);
+    card.appendChild(evGrp);
+    // Remediation
+    card.appendChild(buildRemSection(qid, rem, false, null, null));
+    return card;
+  }
+
+  function buildCustomCard(domainId, index, customQ) {
+    var status = customQ.status || 'unanswered';
+    var rem = customQ.remediation || {};
+    var pfx = 'cq-' + domainId + '-' + index;
+    var card = document.createElement('div');
+    card.className = 'question-card question-card--custom' + getStatusCardClass(status);
+    // Meta row
+    var meta = document.createElement('div');
+    meta.className = 'question-card__meta';
+    var custBadge = document.createElement('span');
+    custBadge.className = 'question-card__id';
+    custBadge.textContent = 'Custom';
+    meta.appendChild(custBadge);
+    var custLbl = document.createElement('span');
+    custLbl.className = 'question-card__custom-label';
+    custLbl.textContent = 'Add your own question (' + (index + 1) + ')';
+    meta.appendChild(custLbl);
+    card.appendChild(meta);
+    // Question text input
+    var textGrp = document.createElement('div');
+    textGrp.className = 'form-group';
+    var textLbl = document.createElement('label');
+    textLbl.setAttribute('for', pfx + '-text');
+    textLbl.textContent = 'Question text';
+    textGrp.appendChild(textLbl);
+    var textInp = document.createElement('input');
+    textInp.type = 'text';
+    textInp.id = pfx + '-text';
+    textInp.value = customQ.text || '';
+    textInp.placeholder = 'Enter your question…';
+    textInp.setAttribute('data-custom-domain', domainId);
+    textInp.setAttribute('data-custom-idx', String(index));
+    textInp.setAttribute('data-field', 'text');
+    textGrp.appendChild(textInp);
+    card.appendChild(textGrp);
+    // References input
+    var refGrp = document.createElement('div');
+    refGrp.className = 'form-group';
+    var refLbl = document.createElement('label');
+    refLbl.setAttribute('for', pfx + '-refs');
+    refLbl.textContent = 'References (optional)';
+    refGrp.appendChild(refLbl);
+    var refInp = document.createElement('input');
+    refInp.type = 'text';
+    refInp.id = pfx + '-refs';
+    refInp.value = typeof customQ.references === 'string' ? customQ.references : '';
+    refInp.placeholder = 'e.g. ISO 27001 A.5.1';
+    refInp.setAttribute('data-custom-domain', domainId);
+    refInp.setAttribute('data-custom-idx', String(index));
+    refInp.setAttribute('data-field', 'references');
+    refGrp.appendChild(refInp);
+    card.appendChild(refGrp);
+    // Status fieldset
+    card.appendChild(buildStatusFieldset(pfx, status, {
+      'data-custom-domain': domainId,
+      'data-custom-idx': String(index)
+    }));
+    // Partial percent (conditional)
+    var ppGrp = document.createElement('div');
+    ppGrp.className = 'form-group conditional-field';
+    if (status !== 'partial') ppGrp.setAttribute('hidden', '');
+    var ppLbl = document.createElement('label');
+    ppLbl.setAttribute('for', pfx + '-pp');
+    ppLbl.textContent = 'Partial compliance (%)';
+    ppGrp.appendChild(ppLbl);
+    var ppInp = document.createElement('input');
+    ppInp.type = 'number'; ppInp.min = '0'; ppInp.max = '100';
+    ppInp.id = pfx + '-pp';
+    ppInp.value = customQ.partialPercent != null ? customQ.partialPercent : '';
+    ppInp.setAttribute('data-custom-domain', domainId);
+    ppInp.setAttribute('data-custom-idx', String(index));
+    ppInp.setAttribute('data-field', 'partialPercent');
+    ppGrp.appendChild(ppInp);
+    card.appendChild(ppGrp);
+    // N/A reason (conditional)
+    var naGrp = document.createElement('div');
+    naGrp.className = 'form-group conditional-field';
+    if (status !== 'na') naGrp.setAttribute('hidden', '');
+    var naLbl = document.createElement('label');
+    naLbl.setAttribute('for', pfx + '-na');
+    naLbl.textContent = 'Reason for N/A';
+    naGrp.appendChild(naLbl);
+    var naInp = document.createElement('input');
+    naInp.type = 'text';
+    naInp.id = pfx + '-na';
+    naInp.value = customQ.naReason || '';
+    naInp.setAttribute('data-custom-domain', domainId);
+    naInp.setAttribute('data-custom-idx', String(index));
+    naInp.setAttribute('data-field', 'naReason');
+    naGrp.appendChild(naInp);
+    card.appendChild(naGrp);
+    // Evidence textarea
+    var evGrp = document.createElement('div');
+    evGrp.className = 'form-group';
+    var evLbl = document.createElement('label');
+    evLbl.setAttribute('for', pfx + '-ev');
+    evLbl.textContent = 'Evidence / notes';
+    evGrp.appendChild(evLbl);
+    var evTa = document.createElement('textarea');
+    evTa.id = pfx + '-ev';
+    evTa.rows = 3;
+    evTa.value = customQ.evidence || '';
+    evTa.setAttribute('data-custom-domain', domainId);
+    evTa.setAttribute('data-custom-idx', String(index));
+    evTa.setAttribute('data-field', 'evidence');
+    evGrp.appendChild(evTa);
+    card.appendChild(evGrp);
+    // Remediation
+    card.appendChild(buildRemSection(pfx, rem, true, domainId, index));
+    return card;
+  }
+
+  function buildStatusFieldset(namePrefix, currentStatus, extraDataAttrs) {
+    var fieldset = document.createElement('fieldset');
+    fieldset.className = 'status-fieldset';
+    var legend = document.createElement('legend');
+    legend.textContent = 'Status';
+    fieldset.appendChild(legend);
+    var div = document.createElement('div');
+    div.className = 'status-radios';
+    var statuses = [
+      { val: 'compliant', label: 'Compliant' },
+      { val: 'partial', label: 'Partial' },
+      { val: 'non-compliant', label: 'Non-compliant' },
+      { val: 'na', label: 'N/A' }
+    ];
+    for (var i = 0; i < statuses.length; i++) {
+      var s = statuses[i];
+      var wrapper = document.createElement('div');
+      wrapper.className = 'status-radio status-radio--' + s.val;
+      var radioId = namePrefix + '-status-' + s.val;
+      var radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.id = radioId;
+      radio.name = namePrefix + '-status';
+      radio.value = s.val;
+      radio.checked = (currentStatus === s.val);
+      radio.setAttribute('data-field', 'status');
+      if (extraDataAttrs) {
+        var ks = Object.keys(extraDataAttrs);
+        for (var k = 0; k < ks.length; k++) {
+          radio.setAttribute(ks[k], extraDataAttrs[ks[k]]);
+        }
+      }
+      var lbl = document.createElement('label');
+      lbl.setAttribute('for', radioId);
+      lbl.textContent = s.label;
+      wrapper.appendChild(radio);
+      wrapper.appendChild(lbl);
+      div.appendChild(wrapper);
+    }
+    fieldset.appendChild(div);
+    return fieldset;
+  }
+
+  function buildRemSection(idPrefix, rem, isCustom, domainId, custIdx) {
+    var section = document.createElement('div');
+    section.className = 'remediation-group';
+    var heading = document.createElement('p');
+    heading.className = 'remediation-group__label';
+    heading.textContent = 'Remediation';
+    section.appendChild(heading);
+    var row = document.createElement('div');
+    row.className = 'remediation-row';
+    // Helper to set routing attrs on an element
+    function setRouting(el, field) {
+      el.setAttribute('data-field', field);
+      if (isCustom) {
+        el.setAttribute('data-custom-domain', domainId);
+        el.setAttribute('data-custom-idx', String(custIdx));
+      } else {
+        el.setAttribute('data-qid', idPrefix);
+      }
+    }
+    // Owner
+    var ownerGrp = document.createElement('div');
+    ownerGrp.className = 'form-group form-group--inline';
+    var ownerLbl = document.createElement('label');
+    ownerLbl.setAttribute('for', idPrefix + '-rem-owner');
+    ownerLbl.textContent = 'Owner';
+    ownerGrp.appendChild(ownerLbl);
+    var ownerInp = document.createElement('input');
+    ownerInp.type = 'text';
+    ownerInp.id = idPrefix + '-rem-owner';
+    ownerInp.value = rem.owner || '';
+    setRouting(ownerInp, 'rem-owner');
+    ownerGrp.appendChild(ownerInp);
+    row.appendChild(ownerGrp);
+    // Target date
+    var dateGrp = document.createElement('div');
+    dateGrp.className = 'form-group form-group--inline';
+    var dateLbl = document.createElement('label');
+    dateLbl.setAttribute('for', idPrefix + '-rem-date');
+    dateLbl.textContent = 'Target date';
+    dateGrp.appendChild(dateLbl);
+    var dateInp = document.createElement('input');
+    dateInp.type = 'date';
+    dateInp.id = idPrefix + '-rem-date';
+    dateInp.value = rem.targetDate || '';
+    setRouting(dateInp, 'rem-date');
+    dateGrp.appendChild(dateInp);
+    row.appendChild(dateGrp);
+    // Status select
+    var statusGrp = document.createElement('div');
+    statusGrp.className = 'form-group form-group--inline';
+    var statusLbl = document.createElement('label');
+    statusLbl.setAttribute('for', idPrefix + '-rem-status');
+    statusLbl.textContent = 'Status';
+    statusGrp.appendChild(statusLbl);
+    var statusSel = document.createElement('select');
+    statusSel.id = idPrefix + '-rem-status';
+    setRouting(statusSel, 'rem-status');
+    var remOpts = [
+      { val: 'none', label: '— None —' },
+      { val: 'planned', label: 'Planned' },
+      { val: 'in-progress', label: 'In progress' },
+      { val: 'remediated', label: 'Remediated' }
+    ];
+    for (var ri = 0; ri < remOpts.length; ri++) {
+      var opt = document.createElement('option');
+      opt.value = remOpts[ri].val;
+      opt.textContent = remOpts[ri].label;
+      if ((rem.status || 'none') === remOpts[ri].val) opt.selected = true;
+      statusSel.appendChild(opt);
+    }
+    statusGrp.appendChild(statusSel);
+    row.appendChild(statusGrp);
+    section.appendChild(row);
+    return section;
+  }
+
+  function appendRefTags(card, refs) {
+    if (!refs) return;
+    var keys = ['iso27001', 'iso27002', 'nis2', 'cis', 'other'];
+    var hasAny = false;
+    for (var i = 0; i < keys.length; i++) {
+      if (refs[keys[i]]) { hasAny = true; break; }
+    }
+    if (!hasAny) return;
+    var refsDiv = document.createElement('div');
+    refsDiv.className = 'question-card__refs';
+    for (var j = 0; j < keys.length; j++) {
+      var rk = keys[j];
+      if (refs[rk]) {
+        var tag = document.createElement('span');
+        tag.className = 'ref-tag';
+        tag.textContent = rk.toUpperCase() + ': ' + refs[rk];
+        refsDiv.appendChild(tag);
+      }
+    }
+    card.appendChild(refsDiv);
+  }
+
+  function buildNarrativeSection(domainId) {
+    var narrative = (app.assessment.domainNarratives || {})[domainId] || '';
+    var section = document.createElement('div');
+    section.className = 'narrative-section';
+    var h3 = document.createElement('h3');
+    h3.className = 'narrative-section__title';
+    h3.textContent = 'Assessor findings';
+    section.appendChild(h3);
+    var narrId = 'narr-' + domainId;
+    var lbl = document.createElement('label');
+    lbl.setAttribute('for', narrId);
+    lbl.className = 'narrative-section__label';
+    lbl.textContent = 'Domain narrative (assessor summary)';
+    section.appendChild(lbl);
+    var ta = document.createElement('textarea');
+    ta.id = narrId;
+    ta.className = 'narrative-textarea';
+    ta.rows = 5;
+    ta.value = narrative;
+    ta.setAttribute('data-narrative-domain', domainId);
+    section.appendChild(ta);
+    return section;
+  }
+
+  /* ── Questionnaire change handling ─────────────────────────── */
+
+  function attachQuestionnaireListeners() {
+    var main = document.getElementById('questionnaire-main');
+    if (!main) return;
+    // 'change' handles radios, selects, and text inputs on blur
+    main.addEventListener('change', function (e) {
+      handleQChange(e.target);
+    });
+    // 'input' handles text/textarea as user types (skip radio/select — handled by change)
+    main.addEventListener('input', function (e) {
+      var t = e.target;
+      var type = (t.type || '').toLowerCase();
+      if (type === 'radio' || t.tagName.toLowerCase() === 'select') return;
+      handleQChange(t);
+    });
+  }
+
+  function handleQChange(target) {
+    if (!app.assessment) return;
+    var field          = target.getAttribute('data-field');
+    var qid            = target.getAttribute('data-qid');
+    var customDomain   = target.getAttribute('data-custom-domain');
+    var customIdx      = target.getAttribute('data-custom-idx');
+    var narrativeDomain = target.getAttribute('data-narrative-domain');
+    if (qid && field) {
+      handleStandardChange(qid, field, target);
+    } else if (customDomain !== null && customIdx !== null && field) {
+      handleCustomChange(customDomain, parseInt(customIdx, 10), field, target);
+    } else if (narrativeDomain !== null) {
+      if (!app.assessment.domainNarratives) app.assessment.domainNarratives = {};
+      app.assessment.domainNarratives[narrativeDomain] = target.value;
+      autosave();
+    }
+  }
+
+  function handleStandardChange(qid, field, target) {
+    if (!app.assessment.answers[qid]) {
+      app.assessment.answers[qid] = {
+        status: 'unanswered', partialPercent: null,
+        naReason: '', evidence: '',
+        remediation: { owner: '', targetDate: '', status: 'none' }
+      };
+    }
+    var ans = app.assessment.answers[qid];
+    if (field === 'status') {
+      ans.status = target.value;
+      var card = findAncestorByClass(target, 'question-card');
+      if (card) {
+        toggleConditionalField(card, 'partialPercent', target.value === 'partial');
+        toggleConditionalField(card, 'naReason', target.value === 'na');
+        updateCardStatusClass(card, target.value);
+      }
+      refreshSidebar();
+    } else if (field === 'partialPercent') {
+      ans.partialPercent = target.value !== '' ? Number(target.value) : null;
+    } else if (field === 'naReason') {
+      ans.naReason = target.value;
+    } else if (field === 'evidence') {
+      ans.evidence = target.value;
+    } else if (field === 'rem-owner') {
+      if (!ans.remediation) ans.remediation = {};
+      ans.remediation.owner = target.value;
+    } else if (field === 'rem-date') {
+      if (!ans.remediation) ans.remediation = {};
+      ans.remediation.targetDate = target.value;
+    } else if (field === 'rem-status') {
+      if (!ans.remediation) ans.remediation = {};
+      ans.remediation.status = target.value;
+    }
+    autosave();
+  }
+
+  function handleCustomChange(domainId, index, field, target) {
+    if (!app.assessment.customQuestions) app.assessment.customQuestions = {};
+    if (!app.assessment.customQuestions[domainId]) {
+      app.assessment.customQuestions[domainId] = [];
+    }
+    while (app.assessment.customQuestions[domainId].length <= index) {
+      app.assessment.customQuestions[domainId].push({});
+    }
+    var cq = app.assessment.customQuestions[domainId][index];
+    if (!cq) { cq = {}; app.assessment.customQuestions[domainId][index] = cq; }
+    if (field === 'text') {
+      cq.text = target.value;
+    } else if (field === 'references') {
+      cq.references = target.value;
+    } else if (field === 'status') {
+      cq.status = target.value;
+      var card = findAncestorByClass(target, 'question-card');
+      if (card) {
+        toggleConditionalField(card, 'partialPercent', target.value === 'partial');
+        toggleConditionalField(card, 'naReason', target.value === 'na');
+        updateCardStatusClass(card, target.value);
+      }
+      refreshSidebar();
+    } else if (field === 'partialPercent') {
+      cq.partialPercent = target.value !== '' ? Number(target.value) : null;
+    } else if (field === 'naReason') {
+      cq.naReason = target.value;
+    } else if (field === 'evidence') {
+      cq.evidence = target.value;
+    } else if (field === 'rem-owner') {
+      if (!cq.remediation) cq.remediation = {};
+      cq.remediation.owner = target.value;
+    } else if (field === 'rem-date') {
+      if (!cq.remediation) cq.remediation = {};
+      cq.remediation.targetDate = target.value;
+    } else if (field === 'rem-status') {
+      if (!cq.remediation) cq.remediation = {};
+      cq.remediation.status = target.value;
+    }
+    autosave();
+  }
+
+  function toggleConditionalField(card, dataField, show) {
+    var inputs = card.querySelectorAll('[data-field="' + dataField + '"]');
+    for (var i = 0; i < inputs.length; i++) {
+      var group = findAncestorByClass(inputs[i], 'conditional-field');
+      if (group) {
+        if (show) { group.removeAttribute('hidden'); }
+        else       { group.setAttribute('hidden', ''); }
+      }
+    }
+  }
+
+  function updateCardStatusClass(card, newStatus) {
+    card.className = card.className
+      .replace(/\bis-answered\b|\bis-partial\b|\bis-non-compliant\b|\bis-na\b/g, '')
+      .trim();
+    var sc = getStatusCardClass(newStatus);
+    if (sc) card.className += sc;
+  }
+
+  function findAncestorByClass(el, cls) {
+    var node = el.parentElement;
+    while (node && node !== document.body) {
+      if (node.classList && node.classList.contains(cls)) return node;
+      node = node.parentElement;
+    }
+    return null;
+  }
+
+  function refreshSidebar() {
+    if (app.template && app.assessment) renderSidebar(app.template.domains);
   }
 
   /* ── Init ────────────────────────────────────────────────── */
@@ -526,16 +1161,20 @@
         autosave();
       });
     }
+
+    // ── Attach questionnaire delegated listeners ──────────────
+    attachQuestionnaireListeners();
   }
 
   document.addEventListener('DOMContentLoaded', init);
 
   /* ── Public API ──────────────────────────────────────────── */
-  app.emptyAssessment = emptyAssessment;
-  app.newAssessment   = newAssessment;
-  app.autosave        = autosave;
-  app.setLang         = setLang;
-  app.showTab         = showTab;
-  app.render          = render;
+  app.emptyAssessment      = emptyAssessment;
+  app.newAssessment        = newAssessment;
+  app.autosave             = autosave;
+  app.setLang              = setLang;
+  app.showTab              = showTab;
+  app.render               = render;
+  app.renderQuestionnaire  = renderQuestionnaire;
 
 })();
