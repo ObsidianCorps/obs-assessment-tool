@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Privacy Notice — OBS Assessment Tool</title>
+  <meta name="description" content="How the OBS Assessment Tool handles your data: everything stays in your browser; nothing is sent to or stored on a server." />
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .legal { max-width: 820px; margin: 0 auto; padding: var(--sp-8, 2rem) 0; }
+    .legal h1 { margin-bottom: .25rem; }
+    .legal .lede { color: var(--clr-slate, #475569); margin-bottom: 2rem; }
+    .legal h2 { margin-top: 2.25rem; margin-bottom: .5rem; }
+    .legal p, .legal li { line-height: 1.65; }
+    .legal ul { padding-left: 1.25rem; }
+    .legal table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .legal th, .legal td { text-align: left; padding: .55rem .7rem; border: 1px solid rgba(0,0,0,.12); vertical-align: top; }
+    .legal th { background: rgba(0,0,0,.035); }
+    .legal .back { display: inline-block; margin-bottom: 1.5rem; font-weight: 600; text-decoration: none; }
+    .legal .callout { background: rgba(59,130,246,.08); border-left: 4px solid #3b82f6; padding: .9rem 1.1rem; border-radius: 6px; margin: 1rem 0; }
+  </style>
+</head>
+<body>
+  <main class="container legal">
+    <a class="back" href="index.html">&larr; Back to home</a>
+    <h1>Privacy Notice</h1>
+    <p class="lede">The OBS Assessment Tool runs entirely in your browser. Nothing you enter is sent to or stored on a server — only standard web-server access logs are kept.</p>
+
+    <div class="callout">
+      <strong>In short:</strong> No backend, no accounts, no analytics, no runtime CDN. Your assessment is auto-saved only in your browser's <code>localStorage</code>, and you keep your own exported files. The server hosting this page retains only ordinary access logs (timestamps, IP, requested URL) — never the data you enter.
+    </div>
+
+    <h2>What data the tool handles</h2>
+    <p>This tool is for consultants conducting information security assessments. The data you enter may include:</p>
+    <ul>
+      <li>Your client's name, industry, and contact details</li>
+      <li>Your name, agency, and contact details</li>
+      <li>Answers to security-posture questions, which may reveal sensitive information about your client's controls, vulnerabilities, and risk profile</li>
+      <li>Free-text notes, narratives, evidence, and remediation plans</li>
+    </ul>
+    <p>This is client-confidential information. Treat exported files accordingly.</p>
+
+    <h2>Where data is stored</h2>
+    <p><strong>All data stays on your device.</strong> The vendored libraries (Chart.js, jsPDF) load from local disk, not a CDN. Data is held in two places:</p>
+    <table>
+      <thead><tr><th>Location</th><th>When</th><th>Format</th></tr></thead>
+      <tbody>
+        <tr><td>Browser <code>localStorage</code></td><td>While a session is in progress (auto-save draft)</td><td>Unencrypted JSON</td></tr>
+        <tr><td>Exported <code>.json</code> / <code>.pdf</code> / <code>.csv</code> file</td><td>When you use an Export button</td><td>Unencrypted</td></tr>
+      </tbody>
+    </table>
+
+    <h2>What the server stores</h2>
+    <p>The web server that delivers this page keeps only standard <strong>access logs</strong> — request timestamp, client IP address, and the URL requested — used for operational and security purposes. It does <strong>not</strong> receive or store any assessment data, answers, notes, or exported files, because the tool makes no data requests to the server.</p>
+
+    <h2>Risks to be aware of</h2>
+    <ul>
+      <li><strong>localStorage is unencrypted.</strong> Anyone with access to your browser profile — including other users of a shared workstation — can read the stored draft.</li>
+      <li><strong>Exported files (JSON, PDF, CSV) are unencrypted.</strong> Restrict access, avoid unencrypted channels, and store them per your organisation's data-handling policy.</li>
+    </ul>
+
+    <h2>How to delete your data</h2>
+    <table>
+      <thead><tr><th>What to delete</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Draft in the browser</td><td>Clear <code>localStorage</code> for this site in your browser's privacy/developer settings</td></tr>
+        <tr><td>Exported files</td><td>Delete the <code>.json</code>, <code>.pdf</code>, or <code>.csv</code> files from your file system and empty your trash</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Retention guidance</h2>
+    <ul>
+      <li>Do not store assessment files on a shared drive unless access is restricted to authorised personnel.</li>
+      <li>Clear drafts from the browser after completing each engagement.</li>
+      <li>Retain exported files only as long as required by your contractual obligations or applicable rules.</li>
+    </ul>
+
+    <h2>GDPR note</h2>
+    <p>If your assessment includes personal data (names, job titles, contact details of your client's staff), you — the consultant — are the <strong>data controller</strong> for that personal data. You must:</p>
+    <ul>
+      <li>Ensure a lawful basis for the processing (typically contractual or legitimate interest tied to the engagement).</li>
+      <li>Inform the individuals whose data you process, per GDPR Articles 13/14.</li>
+      <li>Not retain personal data beyond its purpose.</li>
+      <li>Apply appropriate technical and organisational measures (see the risk notes above).</li>
+    </ul>
+    <p>The tool is a data-processing aid; <strong>Obsidian Corps does not process any data you enter into it.</strong></p>
+
+    <h2>Questions</h2>
+    <p>For questions about this notice, contact <a href="mailto:philippe.parage@obsidiancorps.com">philippe.parage@obsidiancorps.com</a>.</p>
+  </main>
+
+  <footer id="site-footer" aria-label="Site footer">
+    <div class="container">
+      <div class="footer-inner">
+        <p class="footer-copy">
+          <a href="https://github.com/ObsidianCorps/obs-assessment-tool" target="_blank" rel="noopener noreferrer">obs-assessment-tool</a>
+          &mdash; Free &amp; open source (MIT)
+        </p>
+        <p class="footer-meta">
+          Made by
+          <a href="https://obsidiancorps.com" target="_blank" rel="noopener noreferrer" aria-label="ObsidianCorps — obsidiancorps.com">
+            <img src="assets/img/obsidiancorps-logo-white.svg" alt="ObsidianCorps" style="height:18px;width:auto;vertical-align:middle;display:inline-block;" />
+          </a>
+        </p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

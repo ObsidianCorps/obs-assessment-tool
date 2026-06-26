@@ -332,6 +332,13 @@
               aria-selected="false"
               aria-controls="tab-dashboard"
               data-tab="dashboard">Dashboard</button>
+      <button type="button"
+              id="tab-btn-editor"
+              class="app-tab"
+              role="tab"
+              aria-selected="false"
+              aria-controls="tab-editor"
+              data-tab="editor">Template editor</button>
     </div>
   </nav>
 
@@ -443,6 +450,13 @@
       </div>
     </section>
 
+    <!-- TEMPLATE EDITOR ──────────────────────────── -->
+    <section id="tab-editor" role="tabpanel" aria-labelledby="tab-btn-editor" hidden>
+      <div class="editor-outer" id="editor-main">
+        <!-- Populated dynamically by editor.js -->
+      </div>
+    </section>
+
   </div><!-- #app-main -->
 
   <!-- ── Footer ──────────────────────────────── -->
@@ -483,6 +497,7 @@
   <script src="assets/js/report.js"></script>
   <script src="templates/registry.js"></script>
   <script src="templates/infosec-iso27001.js"></script>
+  <script src="assets/js/editor.js"></script>
   <script src="assets/js/app.js"></script>
   <script src="assets/js/consent-banner.js"></script>
 </body>

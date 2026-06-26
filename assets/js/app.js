@@ -332,11 +332,11 @@
     for (var qi = 0; qi < questions.length; qi++) {
       panel.appendChild(buildQuestionCard(questions[qi], qi + 1));
     }
-    var numSlots = typeof domain.customSlots === 'number' ? domain.customSlots : 2;
     var customData = (app.assessment.customQuestions || {})[domainId] || [];
-    for (var ci = 0; ci < numSlots; ci++) {
+    for (var ci = 0; ci < customData.length; ci++) {
       panel.appendChild(buildCustomCard(domainId, ci, customData[ci] || {}));
     }
+    panel.appendChild(buildAddCustomButton(domainId));
     panel.appendChild(buildNarrativeSection(domainId));
     main.appendChild(panel);
   }
@@ -472,8 +472,25 @@
     meta.appendChild(custBadge);
     var custLbl = document.createElement('span');
     custLbl.className = 'question-card__custom-label';
-    custLbl.textContent = 'Add your own question (' + (index + 1) + ')';
+    custLbl.textContent = 'Your question (' + (index + 1) + ')';
     meta.appendChild(custLbl);
+    // Remove button
+    var removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn-sm custom-question-remove-btn';
+    removeBtn.textContent = 'Remove';
+    (function (did, idx) {
+      removeBtn.addEventListener('click', function () {
+        if (!app.assessment || !app.assessment.customQuestions) return;
+        var arr = app.assessment.customQuestions[did];
+        if (!arr) return;
+        arr.splice(idx, 1);
+        autosave();
+        renderDomainMain(did);
+        refreshSidebar();
+      });
+    })(domainId, index);
+    meta.appendChild(removeBtn);
     card.appendChild(meta);
     // Question text input
     var textGrp = document.createElement('div');
@@ -708,6 +725,25 @@
       }
     }
     card.appendChild(refsDiv);
+  }
+
+  function buildAddCustomButton(domainId) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-secondary add-custom-question-btn';
+    btn.textContent = '+ Add your own question';
+    btn.addEventListener('click', function () {
+      if (!app.assessment) return;
+      if (!app.assessment.customQuestions) app.assessment.customQuestions = {};
+      if (!app.assessment.customQuestions[domainId]) {
+        app.assessment.customQuestions[domainId] = [];
+      }
+      app.assessment.customQuestions[domainId].push({});
+      autosave();
+      renderDomainMain(domainId);
+      refreshSidebar();
+    });
+    return btn;
   }
 
   function buildNarrativeSection(domainId) {
@@ -957,13 +993,21 @@
       tabBtns[ti].addEventListener('click', function () {
         var tabName = this.getAttribute('data-tab');
         showTab(tabName);
-        if (tabName === 'dashboard' &&
-            typeof OBS.report !== 'undefined' &&
-            typeof OBS.report.renderDashboard === 'function' &&
-            app.assessment) {
-          var dashPanel = document.getElementById('dashboard-main');
-          if (dashPanel) {
-            OBS.report.renderDashboard(dashPanel, app.template, app.assessment, app.lang);
+        if (tabName === 'dashboard') {
+          // Always re-render so the dashboard reflects the latest answers
+          if (typeof OBS.report !== 'undefined' &&
+              typeof OBS.report.renderDashboard === 'function' &&
+              app.assessment) {
+            var dashPanel = document.getElementById('dashboard-main');
+            if (dashPanel) {
+              OBS.report.renderDashboard(dashPanel, app.template, app.assessment, app.lang);
+            }
+          }
+        } else if (tabName === 'editor') {
+          if (typeof OBS !== 'undefined' &&
+              OBS.editor && typeof OBS.editor.render === 'function') {
+            var editorPanel = document.getElementById('editor-main');
+            if (editorPanel) OBS.editor.render(editorPanel);
           }
         }
       });

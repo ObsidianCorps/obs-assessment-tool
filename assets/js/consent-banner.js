@@ -72,7 +72,7 @@
     actions.setAttribute('style', 'display:flex;align-items:center;gap:14px;flex:0 0 auto;');
 
     var link = document.createElement('a');
-    link.href = 'docs/PRIVACY.md';
+    link.href = 'privacy.html';
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     link.textContent = pick(STRINGS.privacy, lang);
