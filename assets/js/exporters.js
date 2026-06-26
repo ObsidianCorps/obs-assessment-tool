@@ -10,6 +10,10 @@
 
   function esc(v) {
     v = (v == null) ? '' : String(v);
+    // Neutralise CSV formula injection: a leading = + - @ (or tab/CR) can be
+    // executed as a formula by Excel/LibreOffice. Prefix such values with a
+    // single quote so spreadsheets treat them as text.
+    if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;
     return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
   }
   function refStr(r) { return [r && r.iso27001, r && r.iso27002, r && r.nis2, r && r.cis, r && r.other].filter(Boolean).join(' | '); }

@@ -17,3 +17,11 @@ test('csv escapes commas and quotes', function () {
   const csv = exporters.assessmentToCsv(template, a2, 'en');
   assert.ok(csv.indexOf('"has, comma and ""quote"""') >= 0);
 });
+test('csv neutralises formula injection (leading = + - @)', function () {
+  const a3 = { answers: { Q1: { status: 'non-compliant', evidence: '=cmd|/c calc', remediation: { owner: '+SUM(A1)', status: '@danger' } } }, customQuestions: {} };
+  const csv = exporters.assessmentToCsv(template, a3, 'en');
+  // each dangerous value must be prefixed with a single quote so Excel treats it as text
+  assert.ok(csv.indexOf("'=cmd|/c calc") >= 0, 'evidence formula not neutralised');
+  assert.ok(csv.indexOf("'+SUM(A1)") >= 0, 'owner formula not neutralised');
+  assert.ok(csv.indexOf("'@danger") >= 0, 'status formula not neutralised');
+});
