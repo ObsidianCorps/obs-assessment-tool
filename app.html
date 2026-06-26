@@ -363,6 +363,12 @@
           </div>
 
           <div class="form-group">
+            <label for="meta-org">Agency / organisation</label>
+            <input type="text" id="meta-org" name="assessorOrg"
+                   placeholder="e.g. OBS Security" autocomplete="organization">
+          </div>
+
+          <div class="form-group">
             <label for="assessment-date">Assessment date</label>
             <input type="date" id="assessment-date" name="assessmentDate">
           </div>
@@ -378,6 +384,15 @@
             </div>
             <img id="logo-preview" alt="Report logo preview" hidden>
             <p class="form-hint">The logo will appear in the header of exported PDF reports.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="meta-brand-color">Report accent colour (optional)</label>
+            <div class="logo-row">
+              <input type="color" id="meta-brand-color" value="#0f213d">
+              <button type="button" id="btn-reset-brand" class="btn-secondary btn-sm">Use default</button>
+            </div>
+            <p class="form-hint">Sets the accent colour in exported PDF reports. Leave as default (navy) if unsure.</p>
           </div>
 
           <hr class="form-divider">

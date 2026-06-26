@@ -6,6 +6,11 @@
   var app = { template: null, assessment: null, lang: 'en' };
   window.OBS.app = app;
 
+  // Caches the logo data URL chosen before Begin (null = none / removed)
+  var pendingLogo = null;
+  // Caches the brand colour chosen before Begin ('' = use default)
+  var pendingBrandColor = '';
+
   /* ── Core state helpers ──────────────────────────────────── */
 
   function emptyAssessment(template) {
@@ -13,7 +18,7 @@
       schemaVersion: 1,
       templateId: template.id,
       templateVersion: template.version,
-      meta: { clientName: '', assessorName: '', date: '', logo: null },
+      meta: { clientName: '', assessorName: '', assessorOrg: '', date: '', logo: null, brandColor: '' },
       language: app.lang,
       answers: {},
       domainNarratives: {},
@@ -190,18 +195,27 @@
     if (!meta) return;
     var cl = document.getElementById('client-name');
     var as = document.getElementById('assessor-name');
+    var og = document.getElementById('meta-org');
     var dt = document.getElementById('assessment-date');
     var lp = document.getElementById('logo-preview');
+    var bc = document.getElementById('meta-brand-color');
     if (cl) cl.value = meta.clientName || '';
     if (as) as.value = meta.assessorName || '';
+    if (og) og.value = meta.assessorOrg || '';
     if (dt) dt.value = meta.date || '';
+    // Restore brand colour picker and sync pending state
+    if (bc) bc.value = meta.brandColor || '#0f213d';
+    pendingBrandColor = meta.brandColor || '';
+    // Restore logo preview and sync pending state
     if (lp) {
       if (meta.logo) {
         lp.src = meta.logo;
         lp.hidden = false;
+        pendingLogo = meta.logo;
       } else {
         lp.src = '';
         lp.hidden = true;
+        pendingLogo = null;
       }
     }
   }
@@ -210,8 +224,13 @@
     return {
       clientName: (document.getElementById('client-name') || { value: '' }).value || '',
       assessorName: (document.getElementById('assessor-name') || { value: '' }).value || '',
+      assessorOrg: (document.getElementById('meta-org') || { value: '' }).value || '',
       date: (document.getElementById('assessment-date') || { value: '' }).value || '',
-      logo: app.assessment ? (app.assessment.meta && app.assessment.meta.logo) : null
+      // pendingLogo is null when no logo has been selected/removed this session;
+      // fall back to the existing assessment logo (after resume/import).
+      logo: pendingLogo !== null ? pendingLogo
+            : (app.assessment ? (app.assessment.meta && app.assessment.meta.logo) : null),
+      brandColor: pendingBrandColor
     };
   }
 
@@ -325,6 +344,7 @@
     var metaMap = {
       'client-name': 'clientName',
       'assessor-name': 'assessorName',
+      'meta-org': 'assessorOrg',
       'assessment-date': 'date'
     };
     var metaIds = Object.keys(metaMap);
@@ -449,6 +469,8 @@
         var reader = new FileReader();
         reader.onload = function (e) {
           var dataURL = e.target.result;
+          // Always cache so the value is available when Begin is clicked
+          pendingLogo = dataURL;
           if (app.assessment && app.assessment.meta) {
             app.assessment.meta.logo = dataURL;
           }
@@ -466,6 +488,8 @@
     var btnRemoveLogo = document.getElementById('btn-remove-logo');
     if (btnRemoveLogo) {
       btnRemoveLogo.addEventListener('click', function () {
+        // Always clear so Begin picks up the removal even before assessment exists
+        pendingLogo = null;
         if (app.assessment && app.assessment.meta) {
           app.assessment.meta.logo = null;
         }
@@ -474,6 +498,31 @@
           logoPreview.hidden = true;
         }
         if (logoFile) logoFile.value = '';
+        autosave();
+      });
+    }
+
+    // ── Wire brand colour input ──────────────────────────────
+    var brandColorInput = document.getElementById('meta-brand-color');
+    if (brandColorInput) {
+      brandColorInput.addEventListener('change', function () {
+        pendingBrandColor = brandColorInput.value;
+        if (app.assessment && app.assessment.meta) {
+          app.assessment.meta.brandColor = pendingBrandColor;
+        }
+        autosave();
+      });
+    }
+
+    // ── Wire reset brand colour button ───────────────────────
+    var btnResetBrand = document.getElementById('btn-reset-brand');
+    if (btnResetBrand) {
+      btnResetBrand.addEventListener('click', function () {
+        pendingBrandColor = '';
+        if (brandColorInput) brandColorInput.value = '#0f213d';
+        if (app.assessment && app.assessment.meta) {
+          app.assessment.meta.brandColor = '';
+        }
         autosave();
       });
     }
