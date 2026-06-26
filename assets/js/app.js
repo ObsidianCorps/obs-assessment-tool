@@ -1081,14 +1081,25 @@
     if (btnPdf) {
       btnPdf.addEventListener('click', function () {
         if (!app.assessment) { alert('No active assessment to export.'); return; }
-        if (typeof OBS.exporters !== 'undefined' &&
-            typeof OBS.exporters.exportPDF === 'function') {
-          OBS.exporters.exportPDF(app.assessment, app.template, app.lang);
-        } else if (typeof OBS.report !== 'undefined' &&
-                   typeof OBS.report.exportPDF === 'function') {
-          OBS.report.exportPDF(app.assessment, app.template, app.lang);
+        if (!(OBS.exporters && typeof OBS.exporters.buildPdf === 'function')) {
+          alert('PDF export is unavailable: the PDF library failed to load.');
+          return;
         }
-        // Silently no-op if exporter not yet loaded (later task)
+        try {
+          // Render the dashboard first so the report always includes the charts,
+          // even if the user never opened the Dashboard tab. The panel may be
+          // hidden; charts use fixed-size canvases so toDataURL still captures them.
+          var imgs = {};
+          if (OBS.report && OBS.report.renderDashboard && OBS.report.chartImages) {
+            var panel = document.getElementById('tab-dashboard');
+            if (panel) OBS.report.renderDashboard(panel, app.template, app.assessment, app.lang);
+            imgs = OBS.report.chartImages() || {};
+          }
+          var doc = OBS.exporters.buildPdf(app.template, app.assessment, app.lang, imgs);
+          doc.save(safeFilename(app.assessment.meta.clientName || 'assessment') + '.pdf');
+        } catch (e) {
+          alert('Could not generate the PDF: ' + (e && e.message ? e.message : e));
+        }
       });
     }
 
@@ -1097,14 +1108,12 @@
     if (btnCsv) {
       btnCsv.addEventListener('click', function () {
         if (!app.assessment) { alert('No active assessment to export.'); return; }
-        if (typeof OBS.exporters !== 'undefined' &&
-            typeof OBS.exporters.exportCSV === 'function') {
-          OBS.exporters.exportCSV(app.assessment, app.template, app.lang);
-        } else if (typeof OBS.report !== 'undefined' &&
-                   typeof OBS.report.exportCSV === 'function') {
-          OBS.report.exportCSV(app.assessment, app.template, app.lang);
+        if (!(OBS.exporters && typeof OBS.exporters.assessmentToCsv === 'function')) {
+          alert('CSV export is unavailable.');
+          return;
         }
-        // Silently no-op if exporter not yet loaded (later task)
+        var csv = OBS.exporters.assessmentToCsv(app.template, app.assessment, app.lang);
+        downloadBlob(csv, safeFilename(app.assessment.meta.clientName || 'assessment') + '.csv', 'text/csv;charset=utf-8');
       });
     }
 
