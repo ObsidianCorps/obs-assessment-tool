@@ -1120,7 +1120,7 @@
       });
     }
 
-    // ── Wire Export PDF (guarded — OBS.exporters arrives in a later task) ──
+    // ── Wire Export PDF — opens options dialog first ─────────
     var btnPdf = document.getElementById('btn-export-pdf');
     if (btnPdf) {
       btnPdf.addEventListener('click', function () {
@@ -1129,22 +1129,57 @@
           alert('PDF export is unavailable: the PDF library failed to load.');
           return;
         }
-        try {
-          // Render the dashboard first so the report always includes the charts,
-          // even if the user never opened the Dashboard tab. The panel may be
-          // hidden; charts use fixed-size canvases so toDataURL still captures them.
-          var imgs = {};
-          if (OBS.report && OBS.report.renderDashboard && OBS.report.chartImages) {
-            var panel = document.getElementById('tab-dashboard');
-            if (panel) OBS.report.renderDashboard(panel, app.template, app.assessment, app.lang);
-            imgs = OBS.report.chartImages() || {};
-          }
-          var doc = OBS.exporters.buildPdf(app.template, app.assessment, app.lang, imgs);
-          doc.save(safeFilename(app.assessment.meta.clientName || 'assessment') + '.pdf');
-        } catch (e) {
-          alert('Could not generate the PDF: ' + (e && e.message ? e.message : e));
+        var dlg = document.getElementById('pdf-options-dialog');
+        if (dlg) {
+          dlg.showModal();
+          // Move focus to the first checkbox so keyboard users can act immediately
+          var firstCb = dlg.querySelector('input[type="checkbox"]');
+          if (firstCb) firstCb.focus();
         }
       });
+    }
+
+    // ── Wire PDF options dialog ──────────────────────────────
+    var pdfOptsDlg   = document.getElementById('pdf-options-dialog');
+    var btnPdfGen    = document.getElementById('pdf-options-generate');
+    var btnPdfCancel = document.getElementById('pdf-options-cancel');
+
+    if (pdfOptsDlg) {
+      // Cancel / Escape (native <dialog> handles Escape automatically with showModal)
+      if (btnPdfCancel) {
+        btnPdfCancel.addEventListener('click', function () {
+          pdfOptsDlg.close();
+        });
+      }
+
+      // Generate PDF with chosen options
+      if (btnPdfGen) {
+        btnPdfGen.addEventListener('click', function () {
+          var options = {
+            summary:         !!(document.getElementById('pdf-opt-summary') || {}).checked,
+            charts:          !!(document.getElementById('pdf-opt-charts') || {}).checked,
+            recommendations: !!(document.getElementById('pdf-opt-recommendations') || {}).checked,
+            details:         !!(document.getElementById('pdf-opt-details') || {}).checked,
+            narratives:      !!(document.getElementById('pdf-opt-narratives') || {}).checked
+          };
+          pdfOptsDlg.close();
+          if (!app.assessment) return;
+          try {
+            // Render the dashboard first so charts are always available,
+            // even if the user never opened the Dashboard tab.
+            var imgs = {};
+            if (OBS.report && OBS.report.renderDashboard && OBS.report.chartImages) {
+              var panel = document.getElementById('tab-dashboard');
+              if (panel) OBS.report.renderDashboard(panel, app.template, app.assessment, app.lang);
+              imgs = OBS.report.chartImages() || {};
+            }
+            var doc = OBS.exporters.buildPdf(app.template, app.assessment, app.lang, imgs, options);
+            doc.save(safeFilename(app.assessment.meta.clientName || 'assessment') + '.pdf');
+          } catch (e) {
+            alert('Could not generate the PDF: ' + (e && e.message ? e.message : e));
+          }
+        });
+      }
     }
 
     // ── Wire Export CSV (guarded) ────────────────────────────

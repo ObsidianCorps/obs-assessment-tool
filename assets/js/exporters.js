@@ -43,7 +43,7 @@
   var STATUS_LABEL = { compliant: 'Compliant', partial: 'Partial', 'non-compliant': 'Non-compliant', na: 'N/A', unanswered: 'Unanswered' };
 
   // Produce a polished, branded A4 report. `chartImages` = { radar, doughnut } PNG data URLs.
-  function buildPdf(template, assessment, lang, chartImages) {
+  function buildPdf(template, assessment, lang, chartImages, options) {
     var jsPDFns = (typeof window !== 'undefined') && window.jspdf;
     if (!jsPDFns) throw new Error('jsPDF not loaded');
     var doc = new jsPDFns.jsPDF({ unit: 'pt', format: 'a4' });
@@ -54,6 +54,14 @@
     var M = 40;                                       // page margin
     var brand = hexToRgb(meta.brandColor, [15, 33, 61]);   // default professional navy
     var ink = [33, 37, 41], muted = [110, 116, 124];
+
+    // -- section visibility: all true when options is omitted --
+    var o = options || {};
+    var showSummary      = o.summary         !== false;
+    var showCharts       = o.charts          !== false;
+    var showRecs         = o.recommendations !== false;
+    var showDetails      = o.details         !== false;
+    var showNarratives   = o.narratives      !== false;
 
     // --- Header band (brand colour) with logo + title ---
     // Phase 1: determine logo dimensions and titleX without drawing yet.
@@ -158,28 +166,30 @@
     }
 
     // --- Executive summary band ---
-    var overall = S.overallScore(template, assessment);
-    var mat = S.maturity(overall, template.maturityLevels);
-    var comp = S.complianceSummary(template, assessment);
-    var c = S.completeness(template, assessment);
-    doc.setDrawColor(225, 228, 232); doc.setFillColor(248, 249, 251);
-    doc.roundedRect(M, y, PAGE_W - 2 * M, 70, 4, 4, 'FD');
-    var colW = (PAGE_W - 2 * M) / 4;
-    function summaryCell(i, big, small) {
-      var cx = M + colW * i + 14;
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(brand[0], brand[1], brand[2]);
-      doc.text(big, cx, y + 34);
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(muted[0], muted[1], muted[2]);
-      doc.text(small.toUpperCase(), cx, y + 52);
+    if (showSummary) {
+      var overall = S.overallScore(template, assessment);
+      var mat = S.maturity(overall, template.maturityLevels);
+      var comp = S.complianceSummary(template, assessment);
+      var c = S.completeness(template, assessment);
+      doc.setDrawColor(225, 228, 232); doc.setFillColor(248, 249, 251);
+      doc.roundedRect(M, y, PAGE_W - 2 * M, 70, 4, 4, 'FD');
+      var colW = (PAGE_W - 2 * M) / 4;
+      function summaryCell(i, big, small) {
+        var cx = M + colW * i + 14;
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(brand[0], brand[1], brand[2]);
+        doc.text(big, cx, y + 34);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(muted[0], muted[1], muted[2]);
+        doc.text(small.toUpperCase(), cx, y + 52);
+      }
+      summaryCell(0, overall == null ? 'n/a' : Math.round(overall) + '%', 'Overall score');
+      summaryCell(1, mat ? String(mat.level) + '/5' : '–', mat ? I.pick(mat.label, lang) : 'Maturity');
+      summaryCell(2, c.answered + '/' + c.total, 'Answered');
+      summaryCell(3, String(comp.criticalGaps.length), 'Critical gaps');
+      doc.setTextColor(ink[0], ink[1], ink[2]); y += 86;
     }
-    summaryCell(0, overall == null ? 'n/a' : Math.round(overall) + '%', 'Overall score');
-    summaryCell(1, mat ? String(mat.level) + '/5' : '–', mat ? I.pick(mat.label, lang) : 'Maturity');
-    summaryCell(2, c.answered + '/' + c.total, 'Answered');
-    summaryCell(3, String(comp.criticalGaps.length), 'Critical gaps');
-    doc.setTextColor(ink[0], ink[1], ink[2]); y += 86;
 
     // --- Charts ---
-    if (chartImages && (chartImages.radar || chartImages.doughnut)) {
+    if (showCharts && chartImages && (chartImages.radar || chartImages.doughnut)) {
       doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.text('Scores by domain', M, y); y += 8;
       if (chartImages.radar) doc.addImage(chartImages.radar, 'PNG', M, y, 250, 250);
       if (chartImages.doughnut) doc.addImage(chartImages.doughnut, 'PNG', M + 280, y + 20, 210, 210);
@@ -187,120 +197,124 @@
     }
 
     // --- Recommendations table (severity-ranked) ---
-    var recs = S.recommendations(template, assessment);
-    var body = recs.map(function (r, i) {
-      var rem = r.remediation || {};
-      var remTxt = [rem.owner, rem.targetDate, rem.status].filter(Boolean).join(' · ');
-      return [String(i + 1), I.pick(r.text, lang), STATUS_LABEL[r.status] || r.status, String(r.threat), refStr(r.references), remTxt];
-    });
-    if (y > PAGE_H - 140) { doc.addPage(); y = M; }
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(ink[0], ink[1], ink[2]);
-    doc.text('Findings & recommendations (' + recs.length + ')', M, y); y += 10;
-    var head = [['#', 'Finding', 'Status', 'Threat', 'References', 'Remediation']];
-    if (typeof doc.autoTable === 'function') {
-      doc.autoTable({
-        startY: y + 4, head: head, body: body, margin: { left: M, right: M },
-        styles: { fontSize: 8, cellPadding: 5, valign: 'top', overflow: 'linebreak', textColor: ink },
-        headStyles: { fillColor: brand, textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [248, 249, 251] },
-        columnStyles: { 0: { cellWidth: 22 }, 2: { cellWidth: 64 }, 3: { cellWidth: 40, halign: 'center' }, 4: { cellWidth: 110 }, 5: { cellWidth: 90 } }
+    if (showRecs) {
+      var recs = S.recommendations(template, assessment);
+      var body = recs.map(function (r, i) {
+        var rem = r.remediation || {};
+        var remTxt = [rem.owner, rem.targetDate, rem.status].filter(Boolean).join(' · ');
+        return [String(i + 1), I.pick(r.text, lang), STATUS_LABEL[r.status] || r.status, String(r.threat), refStr(r.references), remTxt];
       });
-      y = doc.lastAutoTable.finalY + 12;
-    } else {
-      // Fallback if the autotable plugin is unavailable: simple wrapped lines.
-      doc.setFontSize(9); y += 14;
-      body.forEach(function (row) {
-        if (y > PAGE_H - 60) { doc.addPage(); y = M; }
-        doc.text(doc.splitTextToSize(row[0] + '. [' + row[2] + '] ' + row[1] + '  (' + row[4] + ')', PAGE_W - 2 * M), M, y);
-        y += 26;
-      });
+      if (y > PAGE_H - 140) { doc.addPage(); y = M; }
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(ink[0], ink[1], ink[2]);
+      doc.text('Findings & recommendations (' + recs.length + ')', M, y); y += 10;
+      var head = [['#', 'Finding', 'Status', 'Threat', 'References', 'Remediation']];
+      if (typeof doc.autoTable === 'function') {
+        doc.autoTable({
+          startY: y + 4, head: head, body: body, margin: { left: M, right: M },
+          styles: { fontSize: 8, cellPadding: 5, valign: 'top', overflow: 'linebreak', textColor: ink },
+          headStyles: { fillColor: brand, textColor: [255, 255, 255], fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: [248, 249, 251] },
+          columnStyles: { 0: { cellWidth: 22 }, 2: { cellWidth: 64 }, 3: { cellWidth: 40, halign: 'center' }, 4: { cellWidth: 110 }, 5: { cellWidth: 90 } }
+        });
+        y = doc.lastAutoTable.finalY + 12;
+      } else {
+        // Fallback if the autotable plugin is unavailable: simple wrapped lines.
+        doc.setFontSize(9); y += 14;
+        body.forEach(function (row) {
+          if (y > PAGE_H - 60) { doc.addPage(); y = M; }
+          doc.text(doc.splitTextToSize(row[0] + '. [' + row[2] + '] ' + row[1] + '  (' + row[4] + ')', PAGE_W - 2 * M), M, y);
+          y += 26;
+        });
+      }
     }
 
     // --- Detailed assessment (every domain, every question) ---
-    doc.addPage();
-    var yD = M;
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(ink[0], ink[1], ink[2]);
-    doc.text('Detailed Assessment', M, yD); yD += 24;
+    if (showDetails) {
+      doc.addPage();
+      var yD = M;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(ink[0], ink[1], ink[2]);
+      doc.text('Detailed Assessment', M, yD); yD += 24;
 
-    (template.domains || []).forEach(function (domain) {
-      // Domain heading + score
-      if (yD > PAGE_H - 100) { doc.addPage(); yD = M; }
-      var ds = S.domainScore(domain, assessment);
-      var scoreStr = (ds && ds.score != null) ? Math.round(ds.score) + '%' : 'n/a';
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
-      doc.setTextColor(brand[0], brand[1], brand[2]);
-      doc.text(I.pick(domain.title, lang) + '  —  ' + scoreStr, M, yD); yD += 16;
+      (template.domains || []).forEach(function (domain) {
+        // Domain heading + score
+        if (yD > PAGE_H - 100) { doc.addPage(); yD = M; }
+        var ds = S.domainScore(domain, assessment);
+        var scoreStr = (ds && ds.score != null) ? Math.round(ds.score) + '%' : 'n/a';
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+        doc.setTextColor(brand[0], brand[1], brand[2]);
+        doc.text(I.pick(domain.title, lang) + '  —  ' + scoreStr, M, yD); yD += 16;
 
-      // Domain narrative
-      var narrative = assessment.domainNarratives && assessment.domainNarratives[domain.id];
-      if (narrative) {
-        doc.setFont('helvetica', 'italic'); doc.setFontSize(9);
-        doc.setTextColor(muted[0], muted[1], muted[2]);
-        var narLines = doc.splitTextToSize(String(narrative), PAGE_W - 2 * M);
-        if (yD + narLines.length * 12 > PAGE_H - 60) { doc.addPage(); yD = M; }
-        doc.text(narLines, M, yD); yD += narLines.length * 12 + 8;
-      }
-
-      // Gather template questions + any custom questions for this domain
-      var allQs = (domain.questions || []).slice();
-      var customQs = (assessment.customQuestions && assessment.customQuestions[domain.id]) || [];
-      allQs = allQs.concat(customQs);
-
-      // Build table rows
-      var qBody = allQs.map(function (q) {
-        var a = (assessment.answers || {})[q.id] || {};
-        var statusLbl = STATUS_LABEL[a.status] || a.status || 'Unanswered';
-        if (a.status === 'partial') {
-          statusLbl = 'Partial (' + (a.partialPercent == null ? 50 : a.partialPercent) + '%)';
+        // Domain narrative (omitted when showNarratives is false)
+        var narrative = showNarratives && assessment.domainNarratives && assessment.domainNarratives[domain.id];
+        if (narrative) {
+          doc.setFont('helvetica', 'italic'); doc.setFontSize(9);
+          doc.setTextColor(muted[0], muted[1], muted[2]);
+          var narLines = doc.splitTextToSize(String(narrative), PAGE_W - 2 * M);
+          if (yD + narLines.length * 12 > PAGE_H - 60) { doc.addPage(); yD = M; }
+          doc.text(narLines, M, yD); yD += narLines.length * 12 + 8;
         }
-        var rem = a.remediation || {};
-        var remTxt = [rem.owner, rem.targetDate, rem.status].filter(Boolean).join(' / ');
-        return [
-          String(q.id || ''),
-          I.pick(q.text, lang),
-          statusLbl,
-          a.naReason || '',
-          a.evidence || '',
-          remTxt
-        ];
-      });
 
-      var qHead = [['ID', 'Question', 'Status', 'N/A Reason', 'Evidence', 'Remediation']];
+        // Gather template questions + any custom questions for this domain
+        var allQs = (domain.questions || []).slice();
+        var customQs = (assessment.customQuestions && assessment.customQuestions[domain.id]) || [];
+        allQs = allQs.concat(customQs);
 
-      if (typeof doc.autoTable === 'function') {
-        doc.autoTable({
-          startY: yD,
-          head: qHead,
-          body: qBody,
-          margin: { left: M, right: M },
-          styles: { fontSize: 7.5, cellPadding: 4, valign: 'top', overflow: 'linebreak', textColor: ink },
-          headStyles: { fillColor: brand, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
-          alternateRowStyles: { fillColor: [248, 249, 251] },
-          columnStyles: {
-            0: { cellWidth: 42 },
-            2: { cellWidth: 68 },
-            3: { cellWidth: 72 },
-            4: { cellWidth: 80 },
-            5: { cellWidth: 80 }
+        // Build table rows
+        var qBody = allQs.map(function (q) {
+          var a = (assessment.answers || {})[q.id] || {};
+          var statusLbl = STATUS_LABEL[a.status] || a.status || 'Unanswered';
+          if (a.status === 'partial') {
+            statusLbl = 'Partial (' + (a.partialPercent == null ? 50 : a.partialPercent) + '%)';
           }
+          var rem = a.remediation || {};
+          var remTxt = [rem.owner, rem.targetDate, rem.status].filter(Boolean).join(' / ');
+          return [
+            String(q.id || ''),
+            I.pick(q.text, lang),
+            statusLbl,
+            a.naReason || '',
+            a.evidence || '',
+            remTxt
+          ];
         });
-        yD = doc.lastAutoTable.finalY + 18;
-      } else {
-        // Fallback: simple wrapped text per question
-        doc.setFontSize(8.5); doc.setFont('helvetica', 'normal');
-        doc.setTextColor(ink[0], ink[1], ink[2]);
-        qBody.forEach(function (row) {
-          if (yD > PAGE_H - 60) { doc.addPage(); yD = M; }
-          var txt = '[' + row[0] + '] ' + row[1] + '  |  ' + row[2];
-          if (row[3]) txt += '  |  N/A: ' + row[3];
-          if (row[4]) txt += '  |  Evidence: ' + row[4];
-          if (row[5]) txt += '  |  Remediation: ' + row[5];
-          var fLines = doc.splitTextToSize(txt, PAGE_W - 2 * M);
-          doc.text(fLines, M, yD); yD += fLines.length * 12 + 8;
-        });
-        yD += 10;
-      }
-    });
+
+        var qHead = [['ID', 'Question', 'Status', 'N/A Reason', 'Evidence', 'Remediation']];
+
+        if (typeof doc.autoTable === 'function') {
+          doc.autoTable({
+            startY: yD,
+            head: qHead,
+            body: qBody,
+            margin: { left: M, right: M },
+            styles: { fontSize: 7.5, cellPadding: 4, valign: 'top', overflow: 'linebreak', textColor: ink },
+            headStyles: { fillColor: brand, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+            alternateRowStyles: { fillColor: [248, 249, 251] },
+            columnStyles: {
+              0: { cellWidth: 42 },
+              2: { cellWidth: 68 },
+              3: { cellWidth: 72 },
+              4: { cellWidth: 80 },
+              5: { cellWidth: 80 }
+            }
+          });
+          yD = doc.lastAutoTable.finalY + 18;
+        } else {
+          // Fallback: simple wrapped text per question
+          doc.setFontSize(8.5); doc.setFont('helvetica', 'normal');
+          doc.setTextColor(ink[0], ink[1], ink[2]);
+          qBody.forEach(function (row) {
+            if (yD > PAGE_H - 60) { doc.addPage(); yD = M; }
+            var txt = '[' + row[0] + '] ' + row[1] + '  |  ' + row[2];
+            if (row[3]) txt += '  |  N/A: ' + row[3];
+            if (row[4]) txt += '  |  Evidence: ' + row[4];
+            if (row[5]) txt += '  |  Remediation: ' + row[5];
+            var fLines = doc.splitTextToSize(txt, PAGE_W - 2 * M);
+            doc.text(fLines, M, yD); yD += fLines.length * 12 + 8;
+          });
+          yD += 10;
+        }
+      });
+    }
 
     // --- Footer + page numbers on every page ---
     var pages = doc.internal.getNumberOfPages();

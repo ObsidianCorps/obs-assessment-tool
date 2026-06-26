@@ -257,6 +257,55 @@
       .start-bg { padding: var(--sp-4); }
       .start-card { padding: var(--sp-6); }
     }
+
+    /* ── PDF export options dialog ───────────── */
+    #pdf-options-dialog {
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-6) var(--sp-8);
+      box-shadow: var(--shadow-lg);
+      max-width: 420px;
+      width: 90vw;
+      background: var(--clr-surface);
+      color: var(--clr-text);
+    }
+    #pdf-options-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.45);
+    }
+    #pdf-options-dialog h2 {
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--clr-navy);
+      margin-bottom: var(--sp-5);
+    }
+    .pdf-opts-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-6);
+    }
+    .pdf-opts-item {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+    }
+    .pdf-opts-item input[type="checkbox"] {
+      width: 1.1em;
+      height: 1.1em;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .pdf-opts-item label {
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--clr-text);
+      cursor: pointer;
+    }
+    .pdf-opts-actions {
+      display: flex;
+      gap: var(--sp-3);
+      justify-content: flex-end;
+    }
   </style>
 </head>
 <body>
@@ -458,6 +507,37 @@
     </section>
 
   </div><!-- #app-main -->
+
+  <!-- ── PDF export options dialog ──────────── -->
+  <dialog id="pdf-options-dialog" aria-labelledby="pdf-opts-heading">
+    <h2 id="pdf-opts-heading">PDF export options</h2>
+    <div class="pdf-opts-list">
+      <div class="pdf-opts-item">
+        <input type="checkbox" id="pdf-opt-summary" checked>
+        <label for="pdf-opt-summary">Executive summary</label>
+      </div>
+      <div class="pdf-opts-item">
+        <input type="checkbox" id="pdf-opt-charts" checked>
+        <label for="pdf-opt-charts">Charts</label>
+      </div>
+      <div class="pdf-opts-item">
+        <input type="checkbox" id="pdf-opt-recommendations" checked>
+        <label for="pdf-opt-recommendations">Findings &amp; recommendations</label>
+      </div>
+      <div class="pdf-opts-item">
+        <input type="checkbox" id="pdf-opt-details" checked>
+        <label for="pdf-opt-details">Detailed answers &amp; evidence/notes</label>
+      </div>
+      <div class="pdf-opts-item">
+        <input type="checkbox" id="pdf-opt-narratives" checked>
+        <label for="pdf-opt-narratives">Domain narratives</label>
+      </div>
+    </div>
+    <div class="pdf-opts-actions">
+      <button type="button" id="pdf-options-generate" class="btn-primary btn-sm">Generate PDF</button>
+      <button type="button" id="pdf-options-cancel" class="btn-secondary btn-sm">Cancel</button>
+    </div>
+  </dialog>
 
   <!-- ── Footer ──────────────────────────────── -->
   <footer id="site-footer" aria-label="Site footer">
