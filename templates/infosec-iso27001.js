@@ -9,8 +9,8 @@
       sq: 'Pyetësor i Vlerësimit të Sigurisë së Informacionit'
     },
     description: {
-      en: 'A consultant\'s diagnostic tool mapped to ISO/IEC 27001:2022, ISO/IEC 27002:2022, the NIS2 Directive (EU 2022/2555) and CIS Controls v8. 38 questions across 8 domains.',
-      sq: 'Mjet diagnostikues i konsulentit i hartuar sipas ISO/IEC 27001:2022, ISO/IEC 27002:2022, Direktivës NIS2 (BE 2022/2555) dhe Kontrolleve CIS v8. 38 pyetje në 8 fusha.'
+      en: 'A consultant\'s diagnostic tool mapped to ISO/IEC 27001:2022, ISO/IEC 27002:2022, the NIS2 Directive (EU 2022/2555) and CIS Controls v8. 46 questions across 8 domains.',
+      sq: 'Mjet diagnostikues i konsulentit i hartuar sipas ISO/IEC 27001:2022, ISO/IEC 27002:2022, Direktivës NIS2 (BE 2022/2555) dhe Kontrolleve CIS v8. 46 pyetje në 8 fusha.'
     },
     languages: ['en', 'sq'],
     translationStatus: { sq: 'machine-draft' },
@@ -161,6 +161,34 @@
               sq: 'Kur u krye rishikimi ose testimi i fundit i pavarur, dhe cilat ishin gjetjet kryesore?'
             },
             references: { iso27001: 'A.5.36, A.5.35', iso27002: '5.35 Independent review of information security; 5.36 Compliance with policies, rules and standards', nis2: 'Art. 21(2)(f) Policies and procedures to assess effectiveness', cis: 'CIS 18' }
+          },
+          {
+            id: 'Q39', kind: 'new', threatIndicator: 4, weight: 1.2, critical: true,
+            text: {
+              en: 'Does the management body actively oversee information security risks and hold accountability for cybersecurity governance?',
+              sq: 'A mbikëqyr aktivisht organi drejtues risqet e sigurisë së informacionit dhe mban përgjegjësi për qeverisjen e sigurisë kibernetike?'
+            },
+            goodPractice: {
+              en: [
+                'The management body receives regular reporting on the organisation\'s cybersecurity posture, material risks, and incidents',
+                'Management body members have received appropriate cybersecurity training relevant to their oversight role (NIS2 Art. 20(2))',
+                'Risk appetite and risk tolerance for cybersecurity are formally approved at management level',
+                'Cybersecurity is a standing agenda item at board or senior management meetings',
+                'Accountability for security governance is assigned to a named senior manager or executive'
+              ],
+              sq: [
+                'Organi drejtues merr raporte të rregullta mbi qëndrimin e sigurisë kibernetike të organizatës, risqet materiale dhe incidentet',
+                'Anëtarët e organit drejtues kanë marrë trajnim të përshtatshëm mbi sigurinë kibernetike të rëndësishëm për rolin e tyre mbikëqyrës (NIS2 Neni 20(2))',
+                'Apetiti ndaj riskut dhe toleranca ndaj riskut për sigurinë kibernetike janë miratuar zyrtarisht në nivelin drejtues',
+                'Siguria kibernetike është pikë e vazhdueshme e rendit të ditës në mbledhjet e bordit ose menaxhmentit të lartë',
+                'Përgjegjësia për qeverisjen e sigurisë është caktuar tek një menaxher ose ekzekutiv i lartë i emërtuar'
+              ]
+            },
+            followUp: {
+              en: 'How does the management body receive assurance that cybersecurity risks are being managed effectively?',
+              sq: 'Si merr organi drejtues garanci se risqet e sigurisë kibernetike po menaxhohen efektivisht?'
+            },
+            references: { iso27001: 'A.5.4', iso27002: '5.4 Management responsibilities', nis2: 'Art. 20 Governance; Art. 20(1) Management oversight', cis: 'CIS 17' }
           }
         ]
       },
@@ -297,6 +325,32 @@
               sq: 'A është MFA i detyrueshëm për të gjithë aksesin në distancë, pa asnjë përjashtim?'
             },
             references: { iso27001: 'A.6.7, A.8.1', iso27002: '6.7 Remote working; 8.1 User endpoint devices', nis2: 'Art. 21(2)(j) MFA, secured communications; Art. 21(2)(d) Supply chain; Art. 21(2)(i)', cis: 'CIS 12.7, CIS 6.3' }
+          },
+          {
+            id: 'Q46', kind: 'new', threatIndicator: 3, weight: 1, critical: false,
+            text: {
+              en: 'Is there a formal disciplinary process for information security violations, and are staff aware that policy breaches may result in disciplinary action?',
+              sq: 'A ka një proces formal disiplinor për shkeljet e sigurisë së informacionit, dhe a janë punonjësit të vetëdijshëm se shkeljet e politikës mund të rezultojnë në veprime disiplinore?'
+            },
+            goodPractice: {
+              en: [
+                'A documented disciplinary process covering information security policy breaches, proportionate to severity',
+                'The disciplinary process is communicated to all staff — ideally referenced in the security policy or employment contracts',
+                'Repeat or serious violations are escalated through HR and, where appropriate, to legal or law-enforcement channels',
+                'The process treats accidental and negligent breaches differently from deliberate misconduct'
+              ],
+              sq: [
+                'Proces disiplinor i dokumentuar që mbulon shkeljet e politikës së sigurisë së informacionit, proporcional ndaj ashpërsisë',
+                'Procesi disiplinor komunikohet të gjithë stafit — mundësisht i referuar në politikën e sigurisë ose kontratat e punësimit',
+                'Shkeljet e përsëritura ose të rënda eskalojnë nëpërmjet HR-it dhe, kur është e përshtatshme, në kanalet ligjore ose të zbatimit të ligjit',
+                'Procesi trajton shkeljet aksidentale dhe të pakujdesshme ndryshe nga sjelljet e qëllimshme'
+              ]
+            },
+            followUp: {
+              en: 'Has the disciplinary process been invoked in the past, and are lessons from those cases incorporated into training?',
+              sq: 'A është zbatuar procesi disiplinor në të kaluarën, dhe a janë mësimet nga ato raste të integruara në trajnim?'
+            },
+            references: { iso27001: 'A.6.4', iso27002: '6.4 Disciplinary process', nis2: 'Art. 21(2)(i)', cis: 'CIS 14' }
           }
         ]
       },
@@ -633,6 +687,34 @@
               sq: 'Sa njerëz kanë aktualisht të drejta domain/global admin, dhe a është kjo minimumi i nevojshëm?'
             },
             references: { iso27001: 'A.8.2, A.8.3, A.8.4', iso27002: '8.2 Privileged access rights; 8.3 Information access restriction; 8.4 Access to source code', nis2: 'Art. 21(2)(i)', cis: 'CIS 5.4, CIS 6.8' }
+          },
+          {
+            id: 'Q44', kind: 'new', threatIndicator: 3, weight: 1, critical: false,
+            text: {
+              en: 'Is identity management centralised where possible (e.g. single sign-on), and are service accounts and API credentials governed?',
+              sq: 'A është menaxhimi i identitetit i centralizuar ku është e mundur (p.sh. hyrje e vetme), dhe a qeverisohen llogaritë e shërbimeve dhe kredencialet API?'
+            },
+            goodPractice: {
+              en: [
+                'A centralised directory (e.g. Active Directory, Azure AD) or identity provider offering unified authentication where feasible',
+                'Single sign-on (SSO) implemented for business-critical applications to reduce password sprawl and simplify offboarding',
+                'Service accounts, API keys, and secrets managed in an authorised secrets manager or vault, not embedded in code or spreadsheets',
+                'Service account credentials rotated on a defined schedule and immediately on suspected compromise',
+                'Unused or orphaned identities and credentials identified and deprovisioned regularly'
+              ],
+              sq: [
+                'Direktori i centralizuar (p.sh. Active Directory, Azure AD) ose ofrues identiteti që ofron autentikimi të unifikuar ku është e realizueshme',
+                'Hyrje e vetme (SSO) e implementuar për aplikacionet kritike të biznesit për të reduktuar shpërhapjen e fjalëkalimeve dhe thjeshtuar çprovizionimin',
+                'Llogaritë e shërbimeve, çelësat API dhe sekretet e menaxhuara në një menaxher sekretesh ose vault të autorizuar, jo të ngulitura në kod ose spreadsheet',
+                'Kredencialet e llogarisë së shërbimit rrotullohen sipas një orari të përcaktuar dhe menjëherë kur dyshohet kompromis',
+                'Identitetet dhe kredencialet e papërdorura ose të braktisura identifikohen dhe çprovizionohen rregullisht'
+              ]
+            },
+            followUp: {
+              en: 'Are API keys and service credentials stored securely, and is there a process to rotate them promptly if exposed?',
+              sq: 'A ruhen çelësat API dhe kredencialet e shërbimeve në mënyrë të sigurt, dhe a ka një proces për t\'i rrotulluar menjëherë nëse ekspozohen?'
+            },
+            references: { iso27001: 'A.5.16', iso27002: '5.16 Identity management', nis2: 'Art. 21(2)(i)', cis: 'CIS 5, CIS 6' }
           }
         ]
       },
@@ -747,6 +829,62 @@
               sq: 'Cila është koha mesatare për aplikimin e një patch-i kritik në një sistem të hapur ndaj internetit?'
             },
             references: { iso27001: 'A.8.8', iso27002: '8.8 Management of technical vulnerabilities', nis2: 'Art. 21(2)(c) Vulnerability handling and disclosure', cis: 'CIS 7' }
+          },
+          {
+            id: 'Q40', kind: 'new', threatIndicator: 4, weight: 1.3, critical: true,
+            text: {
+              en: 'Is security event logging centralised, with sufficient retention, and reviewed regularly to detect anomalies or incidents?',
+              sq: 'A janë regjistrat e ngjarjeve të sigurisë të centralizuara, me mbajtje të mjaftueshme, dhe rishikohen rregullisht për të zbuluar anomali ose incidente?'
+            },
+            goodPractice: {
+              en: [
+                'Centralised log collection from critical systems (servers, firewalls, endpoints, authentication systems)',
+                'Log retention period defined and enforced, meeting legal and contractual obligations',
+                'Automated alerting or SIEM capability in place for defined event patterns (e.g. repeated failed logins, privilege escalation, large data transfers)',
+                'Logs are protected from tampering and remain accessible to authorised responders during incidents',
+                'Log review is performed on a regular, scheduled basis — not only reactively after an incident'
+              ],
+              sq: [
+                'Mbledhja e centralizuar e regjistrave nga sistemet kritike (serverë, mure zjarri, pika fundore, sisteme autentikimi)',
+                'Periudha e mbajtjes së regjistrave e përcaktuar dhe e zbatuar, duke plotësuar detyrimet ligjore dhe kontraktuale',
+                'Alarmim i automatizuar ose aftësi SIEM në vend për modele të caktuara ngjarjesh (p.sh. hyrje të dështuara të përsëritura, eskalim privilegjesh, transferime të mëdha të dhënash)',
+                'Regjistrat mbrohen nga manipulimi dhe mbeten të aksesueshëm nga personat e autorizuar gjatë incidenteve',
+                'Rishikimi i regjistrave kryhet rregullisht, sipas një orari — jo vetëm në mënyrë reaktive pas një incidenti'
+              ]
+            },
+            followUp: {
+              en: 'Who is responsible for reviewing security alerts, and what is the response process when a suspicious event is identified?',
+              sq: 'Kush është përgjegjës për rishikimin e alarmeve të sigurisë, dhe cili është procesi i reagimit kur identifikohet një ngjarje e dyshimtë?'
+            },
+            references: { iso27001: 'A.8.15, A.8.16', iso27002: '8.15 Logging; 8.16 Monitoring activities', nis2: 'Art. 21(2)(b) Incident handling', cis: 'CIS 8' }
+          },
+          {
+            id: 'Q41', kind: 'new', threatIndicator: 4, weight: 1.2, critical: true,
+            text: {
+              en: 'Are email security controls in place, including sender authentication (SPF, DKIM, DMARC) and anti-phishing / anti-spam filtering?',
+              sq: 'A janë kontrolleve të sigurisë së emailit në vend, duke përfshirë autentikimin e dërguesit (SPF, DKIM, DMARC) dhe filtrimin anti-phishing / anti-spam?'
+            },
+            goodPractice: {
+              en: [
+                'SPF, DKIM, and DMARC records published and correctly configured for all sending domains',
+                'DMARC policy set to quarantine or reject, with an active reporting address for ongoing monitoring',
+                'Anti-spam and anti-phishing filtering active on inbound email, with regular review of quarantine releases',
+                'Staff trained to recognise and report phishing and suspicious emails through a defined channel',
+                'Links and attachments in email scanned before or upon delivery where technically feasible'
+              ],
+              sq: [
+                'Rekordet SPF, DKIM dhe DMARC të publikuara dhe të konfiguruara saktë për të gjitha domenet dërguese',
+                'Politika DMARC e vendosur në karantinë ose refuzim, me adresë aktive raportimi për monitorim të vazhdueshëm',
+                'Filtrimi anti-spam dhe anti-phishing aktiv në emailin hyrës, me rishikim të rregullt të lirimeve nga karantina',
+                'Stafi i trajnuar për të njohur dhe raportuar phishing dhe emaile të dyshimta nëpërmjet një kanali të përcaktuar',
+                'Lidhjet dhe bashkëngjitjet në email skanuar para ose gjatë dërgimit ku është teknikisht e realizueshme'
+              ]
+            },
+            followUp: {
+              en: 'Has DMARC enforcement been validated end-to-end, and are DMARC aggregate reports being reviewed to detect spoofing attempts?',
+              sq: 'A është validuar zbatimi i DMARC-it nga fundi në fund, dhe a rishikohen raportet agregate të DMARC-it për të zbuluar përpjekje mashtrimi?'
+            },
+            references: { iso27001: 'A.8.20, A.5.14', iso27002: '8.20 Networks security; 5.14 Information transfer', nis2: 'Art. 21(2)(g) Cyber hygiene', cis: 'CIS 9' }
           }
         ]
       },
@@ -985,6 +1123,60 @@
               sq: 'Nëse kjo nuk zbatohet (asnjë zhvillim i brendshëm), konfirmoni dhe kapërceni — përndryshe, çfarë testimi ndodh para se kodi të arrijë në prodhim?'
             },
             references: { iso27001: 'A.8.25, A.8.28', iso27002: '8.25 Secure development life cycle; 8.28 Secure coding', nis2: 'Art. 21(3) Secure development procedures', cis: 'CIS 16' }
+          },
+          {
+            id: 'Q42', kind: 'new', threatIndicator: 4, weight: 1.2, critical: true,
+            text: {
+              en: 'Is cloud service usage formally governed, with approved providers, understood shared-responsibility boundaries, and periodic security configuration reviews?',
+              sq: 'A qeveriset zyrtarisht përdorimi i shërbimeve cloud, me ofrues të miratuar, kufij të kuptuar të përgjegjësisë së ndarë dhe rishikime periodike të konfigurimit të sigurisë?'
+            },
+            goodPractice: {
+              en: [
+                'An approved list or sanctioning process for cloud service providers, covering data classification suitability',
+                'The shared-responsibility model is understood for each major cloud service: what the provider secures vs. what the organisation must configure',
+                'Security configurations reviewed periodically against provider hardening guides or recognised benchmarks (e.g. CIS Benchmarks for cloud platforms)',
+                'Data residency, jurisdiction, and data-transfer obligations (e.g. GDPR Chapter V transfers) considered before cloud adoption',
+                'Contractual security requirements in place with cloud providers, including provisions for data return and deletion on exit'
+              ],
+              sq: [
+                'Listë e miratuar ose proces sanksionimi për ofruesit e shërbimeve cloud, duke mbuluar përshtatshmërinë e klasifikimit të të dhënave',
+                'Modeli i përgjegjësisë së ndarë i kuptuar për secilin shërbim kryesor cloud: çfarë siguron ofruesi vs. çfarë duhet të konfigurojë organizata',
+                'Konfigurimet e sigurisë rishikohen periodikisht sipas udhëzuesve të ngurtësimit të ofruesit ose standardeve të njohura (p.sh. CIS Benchmarks për platformat cloud)',
+                'Vendbanimi i të dhënave, juridiksioni dhe detyrimet e transferimit të të dhënave (p.sh. transferimet e Kapitullit V të GDPR) të konsideruara para adoptimit cloud',
+                'Kërkesat kontraktuale të sigurisë në vend me ofruesit cloud, duke përfshirë dispozita për kthimin dhe fshirjen e të dhënave pas largimit'
+              ]
+            },
+            followUp: {
+              en: 'Is there a comprehensive list of all cloud services in use, including those adopted informally by individual teams or staff?',
+              sq: 'A ka një listë gjithëpërfshirëse të të gjitha shërbimeve cloud në përdorim, duke përfshirë ato të adoptuar joformalisht nga ekipe ose staf individual?'
+            },
+            references: { iso27001: 'A.5.23', iso27002: '5.23 Information security for use of cloud services', nis2: 'Art. 21(2)(d) Supply chain security', cis: 'CIS 15, CIS 3' }
+          },
+          {
+            id: 'Q43', kind: 'new', threatIndicator: 3, weight: 1, critical: false,
+            text: {
+              en: 'Are data leakage prevention (DLP) controls in place to restrict the unauthorised transfer of sensitive data outside approved channels?',
+              sq: 'A janë kontrolleve të parandalimit të rrjedhjes së të dhënave (DLP) në vend për të kufizuar transferimin e paautorizuar të të dhënave të ndjeshme jashtë kanaleve të aprovuara?'
+            },
+            goodPractice: {
+              en: [
+                'Data classification drives DLP controls, so protection is proportionate to the sensitivity of the information handled',
+                'Technical controls restrict or alert on transfer of sensitive data via email, USB, cloud storage, or unsanctioned messaging tools',
+                'Policy prohibits upload of confidential information to personal cloud storage or unsanctioned external accounts',
+                'DLP alerts are reviewed and acted upon in a timely manner by a defined owner'
+              ],
+              sq: [
+                'Klasifikimi i të dhënave nxit kontrollet DLP, kështu mbrojtja është proporcionale ndaj ndjeshmërisë së informacionit të trajtuar',
+                'Kontrolle teknike kufizojnë ose alarmojnë transferimin e të dhënave të ndjeshme nëpërmjet emailit, USB, ruajtjes cloud ose mjeteve të mesazheve të pasanksionuara',
+                'Politika ndalon ngarkimin e informacionit konfidencial në ruajtje cloud personale ose llogari të jashtme të pasanksionuara',
+                'Alarmet DLP rishikohen dhe merren masa në kohën e duhur nga një pronar i përcaktuar'
+              ]
+            },
+            followUp: {
+              en: 'Are DLP controls enforced technically, or does compliance rely primarily on user awareness and policy alone?',
+              sq: 'A zbatohen kontrollet DLP teknikisht, apo pajtueshmëria mbështetet kryesisht tek ndërgjegjësimi i përdoruesit dhe politika?'
+            },
+            references: { iso27001: 'A.8.12', iso27002: '8.12 Data leakage prevention', nis2: 'Art. 21(2)(h)', cis: 'CIS 3.13' }
           }
         ]
       },
@@ -1073,6 +1265,34 @@
               sq: 'A ka përcaktuar organizata nëse bie nën NIS2 si entitet thelbësor apo i rëndësishëm?'
             },
             references: { iso27001: 'A.5.26, A.5.27', iso27002: '5.26 Response to information security incidents; 5.27 Learning from information security incidents', nis2: 'Art. 23 Reporting obligations; Art. 21(2)(b)', cis: 'CIS 17.8' }
+          },
+          {
+            id: 'Q45', kind: 'new', threatIndicator: 4, weight: 1.2, critical: true,
+            text: {
+              en: 'Are digital evidence and logs preserved and collected in a manner that supports incident investigation and, where necessary, legal or regulatory proceedings?',
+              sq: 'A ruhet dhe mblidhet dëshmia dixhitale dhe regjistrat në një mënyrë që mbështet hetimin e incidenteve dhe, kur është e nevojshme, procedurat ligjore ose rregullatore?'
+            },
+            goodPractice: {
+              en: [
+                'Logs and event data are retained with sufficient integrity to be usable as evidence in an investigation or legal proceeding',
+                'A defined evidence collection and chain-of-custody procedure, understood by the incident response team',
+                'Volatile data (running processes, memory state) is preserved before powering off or reimaging a compromised system',
+                'Forensic copies of affected media are taken before remediation where proportionate and feasible',
+                'The organisation knows which external parties (legal counsel, law enforcement, forensic providers) to engage when evidence requires professional handling'
+              ],
+              sq: [
+                'Regjistrat dhe të dhënat e ngjarjeve ruhen me integritet të mjaftueshëm për t\'u përdorur si dëshmi në një hetim ose procedurë ligjore',
+                'Procedurë e përcaktuar e mbledhjes së dëshmive dhe zinxhirit të kujdestarisë, e kuptuar nga ekipi i reagimit ndaj incidenteve',
+                'Të dhënat e paqëndrueshme (procese aktive, gjendja e memorjes) ruhen para se të fiket ose riinstalohet një sistem i kompromentuar',
+                'Kopje forensike të mediave të prekura merren para korrigjimit ku është proporcional dhe i realizueshëm',
+                'Organizata di cilët palë të jashtme (këshilltar ligjor, zbatim i ligjit, ofrues forensik) të angazhojë kur dëshmia kërkon trajtim profesional'
+              ]
+            },
+            followUp: {
+              en: 'If a serious incident occurred today, does the organisation have the internal or contracted capability to preserve and analyse digital evidence?',
+              sq: 'Nëse ndodh sot një incident i rëndë, a ka organizata kapacitetin e brendshëm ose të kontraktuar për të ruajtur dhe analizuar dëshminë dixhitale?'
+            },
+            references: { iso27001: 'A.5.28, A.8.15', iso27002: '5.28 Collection of evidence; 8.15 Logging', nis2: 'Art. 21(2)(b); Art. 23', cis: 'CIS 8.10' }
           }
         ]
       }
