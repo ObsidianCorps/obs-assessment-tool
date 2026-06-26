@@ -12,10 +12,10 @@ test('template is structurally valid', function () {
   const r = validate.validateTemplate(t);
   assert.strictEqual(r.ok, true, JSON.stringify(r.errors));
 });
-test('has 8 domains and 46 questions', function () {
+test('has 8 domains and 58 questions', function () {
   assert.strictEqual(t.domains.length, 8);
   const n = t.domains.reduce(function (s, d) { return s + d.questions.length; }, 0);
-  assert.strictEqual(n, 46);
+  assert.strictEqual(n, 58);
 });
 test('every domain has 2 custom slots', function () {
   t.domains.forEach(function (d) { assert.strictEqual(d.customSlots, 2); });
