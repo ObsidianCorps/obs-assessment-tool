@@ -1,0 +1,8 @@
+{
+  "name": "obs-assessment-tool",
+  "version": "1.0.0",
+  "private": false,
+  "license": "MIT",
+  "description": "Open-source security assessment questionnaire tool (ISO 27001/27002, NIS2, CIS v8).",
+  "scripts": { "test": "node tests/run.js" }
+}
