@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "templateId": "infosec-iso27001",
+  "templateVersion": "1.0.0",
+  "language": "en",
+  "meta": {
+    "clientName": "Acme Consulting S.A.",
+    "assessorName": "Jane Smith",
+    "assessorOrg": "Obsidian Corps",
+    "date": "2026-06-26",
+    "logo": null
+  },
+  "answers": {
+    "Q1": {
+      "status": "compliant",
+      "notes": "Information security policy approved by the CEO in January 2026 and communicated to all staff via the intranet."
+    },
+    "Q2": {
+      "status": "partial",
+      "partialPercent": 60,
+      "notes": "An asset inventory exists for servers and network equipment but laptops and mobile devices are not fully covered."
+    },
+    "Q3": {
+      "status": "non-compliant",
+      "notes": "No compliance register is maintained. Legal obligations are tracked informally by the CFO.",
+      "remediation": {
+        "owner": "CFO / Legal",
+        "dueDate": "2026-09-30",
+        "description": "Create and maintain a register of applicable legal, regulatory, and contractual obligations. Assign a named owner and schedule quarterly reviews."
+      }
+    },
+    "Q4": {
+      "status": "na",
+      "naReason": "The organisation does not process personal data on behalf of third parties; GDPR obligations are limited to internal employee data, which is handled by the HR system."
+    }
+  },
+  "domainNarratives": {
+    "governance": "Governance foundations are partially in place. A security policy exists but the compliance register requires formalisation and ongoing maintenance.",
+    "people": "",
+    "thirdparty": "",
+    "physical": "",
+    "iam": "",
+    "network": "",
+    "data": "",
+    "incident": ""
+  },
+  "customQuestions": {
+    "governance": [],
+    "people": [],
+    "thirdparty": [],
+    "physical": [],
+    "iam": [],
+    "network": [],
+    "data": [],
+    "incident": []
+  }
+}
