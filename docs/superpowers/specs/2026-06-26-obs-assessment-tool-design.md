@@ -23,9 +23,11 @@ supports exporting/importing each assessment.
 
 ## 2. Core constraints
 
-1. **Zero build step.** Launchable by double-clicking `index.html` (`file://`),
-   no bundler, no server, no install. Also hostable as plain static files
-   (e.g. GitHub Pages).
+1. **Zero build step.** Launchable by double-clicking the HTML (`file://`),
+   no bundler, no server, no install. `index.html` is the landing/home page;
+   `app.html` is the assessment tool (double-click `app.html` for local use, or
+   open `index.html` and click **Start assessment**). Also hostable as plain
+   static files (GitHub Pages) or via Docker/nginx (Dokploy, §14).
 2. **Plain HTML + vanilla JS.** Third-party libraries are **vendored locally**
    in `assets/js/vendor/` and loaded from there by default, so the app works
    fully offline and deterministically. CDN is an optional, documented swap —
@@ -33,7 +35,7 @@ supports exporting/importing each assessment.
    CDN/local version drift, and offline breakage in one decision.)
 3. **Export / import is a first-class feature.** Each assessment exports to a
    JSON file and re-imports later, with validation and a version-mismatch
-   strategy (§9).
+   strategy (§10).
 4. **No backend, no database, no accounts.** All state is local
    (localStorage when available + exported JSON files).
 5. **Data-driven i18n.** v1 ships **English (`en`)** and **Albanian (`sq`)**.
@@ -56,7 +58,7 @@ supports exporting/importing each assessment.
   losing work."*
 - **PDF generation does not use html2canvas** (it taints the canvas under
   `file://` and yields blank/corrupt output). Charts are exported via Chart.js's
-  own `canvas.toDataURL()` and placed into the PDF by jsPDF directly (§7).
+  own `canvas.toDataURL()` and placed into the PDF by jsPDF directly (§6).
 
 ## 3. Architecture
 
@@ -64,7 +66,8 @@ Static client-side single-page app. No backend.
 
 ```
 obs-assessment-tool/
-├─ index.html                 ← the app (double-click to run)
+├─ index.html                 ← landing/home page (what it does + Start button)
+├─ app.html                   ← the assessment tool (double-click to run locally)
 ├─ assets/
 │  ├─ css/styles.css
 │  ├─ js/
@@ -74,6 +77,7 @@ obs-assessment-tool/
 │  │  ├─ storage.js           ← localStorage autosave + JSON export/import + validate
 │  │  ├─ exporters.js         ← PDF (jsPDF) + CSV gap/SoA export
 │  │  ├─ report.js            ← charts (Chart.js) + dashboard rendering
+│  │  ├─ landing.js           ← minimal home-page interactions (year, links)
 │  │  └─ vendor/              ← local copies of Chart.js, jsPDF (loaded by default)
 ├─ templates/
 │  ├─ registry.js             ← window.OBS_TEMPLATES = {}
@@ -88,6 +92,10 @@ obs-assessment-tool/
 │  ├─ SCORING.md              ← worked scoring example + sample assessment JSON
 │  └─ examples/assessment.json
 ├─ .github/workflows/         ← CI: run tests + validate templates on PR
+├─ deploy/
+│  ├─ Dockerfile              ← nginx serving the static files
+│  ├─ docker-compose.yml      ← Dokploy service definition
+│  └─ nginx.conf              ← static config (caching, SPA-ish, security headers)
 ├─ CONTRIBUTING.md            ← add a template, add a language, vendoring, PR flow
 ├─ LICENSE                    ← MIT
 └─ README.md                  ← intro, quick start, browser matrix, a11y, demo link
@@ -105,7 +113,7 @@ obs-assessment-tool/
   and is also `require`-able via a tiny shim used only by tests (no build).
 - **storage.js** — autosave/load to localStorage (with availability detection);
   serialize to / parse from export JSON; **validate** imported files against the
-  schema and run the version-mismatch strategy (§9).
+  schema and run the version-mismatch strategy (§10).
 - **exporters.js** — generate the downloadable **PDF** (jsPDF + chart
   `toDataURL()`) and the **CSV gap/SoA** file.
 - **report.js** — render charts and the dashboard.
@@ -239,9 +247,28 @@ All tunable numbers live in template data, not code.
   Applicability or a NIS2 Art. 21 evidence file.
 - **JSON export/import:** download the `Assessment`; re-import via
   `<input type="file">` + `FileReader` (works under `file://`), validated on
-  import (§9).
+  import (§10).
 
-## 7. UI flow
+## 7. Landing page (`index.html`)
+
+A simple, self-contained marketing/home page (same vanilla stack, no build):
+
+- **Hero:** name + one-line description (consultant's diagnostic tool mapped to
+  ISO/IEC 27001:2022, ISO/IEC 27002:2022, NIS2, CIS Controls v8) and a primary
+  **Start assessment** button linking to `app.html`.
+- **What it does:** short sections — the 8 domains / 38 questions, multilingual
+  (EN/SQ), scoring + maturity + compliance summary, severity-ranked
+  recommendations, remediation tracking, and PDF/CSV/JSON export.
+- **How it works / privacy:** runs entirely in your browser, no account, no data
+  leaves the device; **Save** exports a JSON file you keep, and you can re-import
+  it any time to continue.
+- **Free & open source:** a prominent statement that the tool is **free and open
+  source (MIT)**, with a **GitHub repository link** (and "view source /
+  contribute"). The repo link and MIT/free statement also appear in a shared
+  **footer** on both the landing page and the app.
+- Localised in EN/SQ via the same i18n layer.
+
+## 8. App UI flow (`app.html`)
 
 1. **Start:** choose a template (registry-driven) + enter metadata (client,
    assessor, date).
@@ -253,17 +280,22 @@ All tunable numbers live in template data, not code.
    Each domain also has a **narrative box** and its 2 "Add your own" slots.
 4. **Dashboard:** charts + maturity + compliance summary + severity-ranked
    recommendations/remediation.
-5. **Export:** JSON, PDF, or CSV. Autosave to localStorage when available;
-   otherwise the in-memory banner reminds the user to export.
+5. **Save / Export:** the primary **Save** button **exports the assessment to a
+   JSON file** (the user's durable copy), and **Import** loads one back to
+   continue. PDF and CSV exports are also available. In parallel, the app
+   autosaves to localStorage when available; if it is blocked, the in-memory
+   banner reminds the user that Save (JSON export) is the way to keep work.
+6. A shared **footer** shows the GitHub repo link and the "free & open source
+   (MIT)" statement.
 
-## 8. Albanian content
+## 9. Albanian content
 
 v1 Albanian (`sq`) is **machine-drafted, flagged for professional review**:
 `translationStatus.sq = "machine-draft"`, a visible in-app banner when `sq` is
 active, and a disclaimer in the PDF header. Missing translations fall back to
 English so nothing renders blank.
 
-## 9. Import validation & version-mismatch strategy
+## 10. Import validation & version-mismatch strategy
 
 On import, `storage.js`:
 
@@ -281,7 +313,7 @@ On import, `storage.js`:
 
 `schemaVersion` bumps follow the same rule with explicit, documented migrations.
 
-## 10. Testing
+## 11. Testing
 
 - **scoring.js** unit tests: status→value (incl. partial %), N/A exclusion,
   unanswered completeness, domain/overall aggregation, maturity banding,
@@ -299,10 +331,12 @@ On import, `storage.js`:
   JSON; re-import; export PDF and CSV; confirm it all works **offline** (vendored
   libs, no network); verify localStorage-blocked fallback banner on Safari.
 
-## 11. Documentation & open-source essentials (in scope)
+## 12. Documentation & open-source essentials (in scope)
 
-- **README:** intro, screenshot/demo link, quick start (double-click + hosted),
-  browser-support matrix, a11y statement, privacy note, license.
+- **README:** intro, screenshot, **live demo link
+  (https://assessment.obsidiancorps.com)**, quick start (double-click + hosted),
+  browser-support matrix, a11y statement, privacy note, "free & open source
+  (MIT)" statement, deploy-it-yourself (Docker/Dokploy) pointer.
 - **CONTRIBUTING.md:** how to author a new template (with the schema), how to add
   a language, the vendoring/refresh process + pinned versions, PR flow.
 - **docs/PRIVACY.md:** assessments may contain client-confidential data; it is
@@ -312,7 +346,7 @@ On import, `storage.js`:
 - **Browser support matrix:** Chrome/Edge 90+, Firefox 88+, Safari 14+ (with the
   `file://` localStorage caveat documented).
 
-## 12. Out of scope for v1 (YAGNI / deferred)
+## 13. Out of scope for v1 (YAGNI / deferred)
 
 - Backend, accounts, multi-user, server-side storage.
 - Build tooling / bundler / npm-install-to-run.
@@ -326,7 +360,32 @@ On import, `storage.js`:
 - Professional FR/DE/SQ translation (structure supports them; EN is
   authoritative, SQ is a flagged machine draft).
 
-## 13. Deferred / open decisions
+## 14. Deployment (Dokploy @ assessment.obsidiancorps.com)
+
+The official instance is hosted at **https://assessment.obsidiancorps.com** via
+**Dokploy**, but nothing about the app depends on the host — it is the same
+static files.
+
+- **`deploy/Dockerfile`:** `nginx:alpine` serving the repository's static files
+  from `/usr/share/nginx/html` (copies `index.html`, `app.html`, `assets/`,
+  `templates/`). No build stage — files are copied as-is.
+- **`deploy/nginx.conf`:** sane static serving — `index.html` as root, long
+  cache for `assets/` and `templates/`, no-cache for the HTML entry points, and
+  security headers (`X-Content-Type-Options`, `X-Frame-Options`,
+  `Referrer-Policy`, a conservative `Content-Security-Policy` consistent with the
+  vendored-local, no-CDN runtime). gzip enabled.
+- **`deploy/docker-compose.yml`:** a single `web` service Dokploy can deploy.
+  TLS and the `assessment.obsidiancorps.com` subdomain routing are handled by
+  **Dokploy's built-in proxy (Traefik)** — documented via labels/host rule, with
+  HTTPS/Let's Encrypt termination at the proxy. The container itself just serves
+  HTTP on port 80.
+- **CSP note:** because there is **no runtime CDN**, the CSP can be strict
+  (`default-src 'self'`), which is both a security win and a guarantee the
+  offline/`file://` behaviour matches the hosted behaviour.
+- README documents the one-command local run (`docker compose -f
+  deploy/docker-compose.yml up`) and the Dokploy setup steps for re-deployers.
+
+## 15. Deferred / open decisions
 
 - Exact machine-drafted Albanian wording to be human-reviewed later.
 - Default weights: seeded from threat indicators with weight 1; tunable in
