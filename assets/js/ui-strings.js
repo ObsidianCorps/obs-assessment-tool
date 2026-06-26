@@ -23,6 +23,7 @@
     'btn.import':             { en: 'Import',                   sq: 'Importo' },
     'btn.exportPdf':          { en: 'Export PDF',          sq: 'Eksporto PDF' },
     'btn.exportCsv':          { en: 'Export CSV',          sq: 'Eksporto CSV' },
+    'btn.encrypt':            { en: 'Encrypt',                 sq: 'Enkripto' },
 
     // ── Banners ─────────────────────────────────────────────────────
     'banner.sqDraft':         { en: 'ℹ The Albanian (Shqip) version of this template is a machine-generated draft and may contain inaccuracies. Verify against the English original before use.',

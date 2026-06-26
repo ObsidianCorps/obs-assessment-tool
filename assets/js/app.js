@@ -937,12 +937,16 @@
     var unlocked = OBS.storage.isUnlocked();
     var checkbox  = document.getElementById('enc-enable-checkbox');
     var indicator = document.getElementById('enc-lock-indicator');
+    var encBtn    = document.getElementById('btn-encrypt');
     if (checkbox) {
       checkbox.checked  = enc;
       // Prevent toggling when encrypted-but-locked (no key to decrypt with)
       checkbox.disabled = enc && !unlocked;
     }
     if (indicator) indicator.hidden = !enc;
+    // Header "Encrypt" button is the discoverable entry point: show it only when
+    // encryption is NOT yet enabled (when enabled, the "Encrypted" badge shows).
+    if (encBtn) encBtn.hidden = enc;
   }
 
   // Load the decrypted draft into the app exactly like the resume-draft flow.
@@ -1007,6 +1011,18 @@
             checkbox.checked  = OBS.storage.isEncrypted();
           });
         }
+      });
+    }
+
+    // ── Header "Encrypt" button: discoverable way to set the password ──
+    var encryptBtn = document.getElementById('btn-encrypt');
+    if (encryptBtn && enableDialog) {
+      encryptBtn.addEventListener('click', function () {
+        if (enableError) enableError.hidden = true;
+        if (pw1El) pw1El.value = '';
+        if (pw2El) pw2El.value = '';
+        enableDialog.showModal();
+        if (pw1El) pw1El.focus();
       });
     }
 
