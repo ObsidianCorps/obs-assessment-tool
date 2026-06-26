@@ -929,6 +929,195 @@
     if (app.template && app.assessment) renderSidebar(app.template.domains);
   }
 
+  /* ── Encryption UI ───────────────────────────────────────── */
+
+  // Update checkbox + lock indicator to reflect current crypto state.
+  function updateEncryptionUI() {
+    var enc      = OBS.storage.isEncrypted();
+    var unlocked = OBS.storage.isUnlocked();
+    var checkbox  = document.getElementById('enc-enable-checkbox');
+    var indicator = document.getElementById('enc-lock-indicator');
+    if (checkbox) {
+      checkbox.checked  = enc;
+      // Prevent toggling when encrypted-but-locked (no key to decrypt with)
+      checkbox.disabled = enc && !unlocked;
+    }
+    if (indicator) indicator.hidden = !enc;
+  }
+
+  // Load the decrypted draft into the app exactly like the resume-draft flow.
+  function resumeEncryptedDraft(assessment) {
+    var draftTemplate = window.OBS_TEMPLATES && window.OBS_TEMPLATES[assessment.templateId];
+    if (!draftTemplate) return;
+    var result = OBS.storage.reconcile(assessment, draftTemplate);
+    app.template   = draftTemplate;
+    app.assessment = result.assessment;
+    app.lang       = app.assessment.language || 'en';
+    document.documentElement.lang = app.lang;
+    buildLangToggle(draftTemplate);
+    var sel = document.getElementById('template-select');
+    if (sel) sel.value = draftTemplate.id;
+    restoreFormMeta(app.assessment.meta);
+    if (result.notices.length) showNotices(result.notices);
+    autosave();
+    showTab('questionnaire');
+    render();
+  }
+
+  // Wire all encryption-related event handlers. Call this once in init().
+  function initEncryptionUI() {
+    var checkbox     = document.getElementById('enc-enable-checkbox');
+    var enableDialog = document.getElementById('enc-enable-dialog');
+    var enableSubmit = document.getElementById('enc-enable-submit');
+    var enableCancel = document.getElementById('enc-enable-cancel');
+    var enableError  = document.getElementById('enc-enable-error');
+    var unlockDialog = document.getElementById('enc-unlock-dialog');
+    var unlockSubmit = document.getElementById('enc-unlock-submit');
+    var unlockSkip   = document.getElementById('enc-unlock-skip');
+    var unlockError  = document.getElementById('enc-unlock-error');
+    var unlockPwEl   = document.getElementById('enc-unlock-password');
+    var pw1El        = document.getElementById('enc-password-1');
+    var pw2El        = document.getElementById('enc-password-2');
+
+    // ── Encryption toggle checkbox ──────────────────────────
+    if (checkbox) {
+      checkbox.addEventListener('change', function () {
+        if (checkbox.checked) {
+          // User wants to enable: revert until confirmed in the dialog
+          checkbox.checked = false;
+          if (!enableDialog) return;
+          if (enableError) enableError.hidden = true;
+          if (pw1El) pw1El.value = '';
+          if (pw2El) pw2El.value = '';
+          enableDialog.showModal();
+          if (pw1El) pw1El.focus();
+        } else {
+          // User wants to disable
+          if (!OBS.storage.isUnlocked()) {
+            checkbox.checked = true; // revert
+            alert('Please unlock the draft first before disabling encryption.');
+            return;
+          }
+          checkbox.disabled = true;
+          OBS.storage.setEncryption(false, '').then(function () {
+            checkbox.disabled = false;
+            updateEncryptionUI();
+          }).catch(function () {
+            checkbox.disabled = false;
+            checkbox.checked  = OBS.storage.isEncrypted();
+          });
+        }
+      });
+    }
+
+    // ── Enable dialog: submit ──────────────────────────────
+    if (enableSubmit) {
+      enableSubmit.addEventListener('click', function () {
+        var pw1 = pw1El ? pw1El.value : '';
+        var pw2 = pw2El ? pw2El.value : '';
+        if (!pw1) {
+          if (enableError) { enableError.textContent = 'Please enter a password.'; enableError.hidden = false; }
+          return;
+        }
+        if (pw1 !== pw2) {
+          if (enableError) { enableError.textContent = 'Passwords do not match. Please re-enter.'; enableError.hidden = false; }
+          return;
+        }
+        if (enableError) enableError.hidden = true;
+        enableSubmit.disabled = true;
+        enableSubmit.textContent = 'Enabling…';
+        OBS.storage.setEncryption(true, pw1).then(function () {
+          if (enableDialog) enableDialog.close();
+          enableSubmit.disabled = false;
+          enableSubmit.textContent = 'Enable encryption';
+          if (pw1El) pw1El.value = '';
+          if (pw2El) pw2El.value = '';
+          updateEncryptionUI();
+        }).catch(function (e) {
+          if (enableError) {
+            enableError.textContent = 'Error enabling encryption: ' + (e && e.message ? e.message : String(e));
+            enableError.hidden = false;
+          }
+          enableSubmit.disabled = false;
+          enableSubmit.textContent = 'Enable encryption';
+        });
+      });
+    }
+
+    // ── Enable dialog: Enter key shortcut ─────────────────
+    if (enableDialog) {
+      enableDialog.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && enableSubmit && !enableSubmit.disabled) enableSubmit.click();
+      });
+      // When the dialog is dismissed with Escape, ensure checkbox stays unchecked
+      enableDialog.addEventListener('cancel', function () {
+        if (checkbox) checkbox.checked = OBS.storage.isEncrypted();
+      });
+    }
+
+    // ── Enable dialog: cancel ─────────────────────────────
+    if (enableCancel) {
+      enableCancel.addEventListener('click', function () {
+        if (enableDialog) enableDialog.close();
+        if (pw1El) pw1El.value = '';
+        if (pw2El) pw2El.value = '';
+        if (enableError) enableError.hidden = true;
+        if (checkbox) checkbox.checked = OBS.storage.isEncrypted();
+      });
+    }
+
+    // ── Unlock dialog: submit ─────────────────────────────
+    if (unlockSubmit) {
+      unlockSubmit.addEventListener('click', function () {
+        var pw = unlockPwEl ? unlockPwEl.value : '';
+        if (!pw) {
+          if (unlockError) { unlockError.textContent = 'Please enter your password.'; unlockError.hidden = false; }
+          return;
+        }
+        if (unlockError) unlockError.hidden = true;
+        unlockSubmit.disabled = true;
+        unlockSubmit.textContent = 'Unlocking…';
+        OBS.storage.unlock(pw).then(function (result) {
+          unlockSubmit.disabled = false;
+          unlockSubmit.textContent = 'Unlock';
+          if (result.ok) {
+            if (unlockPwEl) unlockPwEl.value = '';
+            if (unlockDialog) unlockDialog.close();
+            resumeEncryptedDraft(result.assessment);
+            updateEncryptionUI();
+          } else {
+            if (unlockError) { unlockError.textContent = 'Incorrect password. Please try again.'; unlockError.hidden = false; }
+            if (unlockPwEl) { unlockPwEl.value = ''; unlockPwEl.focus(); }
+          }
+        }).catch(function () {
+          unlockSubmit.disabled = false;
+          unlockSubmit.textContent = 'Unlock';
+          if (unlockError) { unlockError.textContent = 'An error occurred. Please try again.'; unlockError.hidden = false; }
+        });
+      });
+    }
+
+    // ── Unlock dialog: Enter key shortcut ─────────────────
+    if (unlockPwEl) {
+      unlockPwEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && unlockSubmit && !unlockSubmit.disabled) unlockSubmit.click();
+      });
+    }
+
+    // ── Unlock dialog: skip (start without the encrypted draft) ──
+    if (unlockSkip) {
+      unlockSkip.addEventListener('click', function () {
+        if (unlockPwEl) unlockPwEl.value = '';
+        if (unlockError) unlockError.hidden = true;
+        if (unlockDialog) unlockDialog.close();
+        updateEncryptionUI();
+      });
+    }
+
+    // Set initial visual state
+    updateEncryptionUI();
+  }
+
   /* ── Init ────────────────────────────────────────────────── */
 
   function init() {
@@ -957,6 +1146,9 @@
 
     // Populate template <select>
     populateTemplateSelect();
+
+    // Init encryption UI handlers before draft check (unlock dialog may open below)
+    initEncryptionUI();
 
     // Check for existing draft
     var prior = OBS.storage.loadDraft();
@@ -999,6 +1191,15 @@
             try { localStorage.removeItem('obs-assessment-draft'); } catch (e) { /* ignore */ }
           });
         }
+      }
+    } else if (prior && prior.encrypted) {
+      // Draft is AES-GCM encrypted — open the unlock dialog
+      var encUnlockDlg = document.getElementById('enc-unlock-dialog');
+      if (encUnlockDlg) {
+        encUnlockDlg.showModal();
+        // Focus after the browser has rendered the dialog
+        var encPwInput = document.getElementById('enc-unlock-password');
+        if (encPwInput) setTimeout(function () { encPwInput.focus(); }, 60);
       }
     }
 
