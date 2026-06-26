@@ -34,16 +34,17 @@ The container serves the tool over HTTP via nginx. Adjust the port in `deploy/do
 
 ## Features
 
-- **38 questions across 8 domains** — Governance, People, Third-party, Physical, Identity & access, Network, Data protection, Incident response
+- **58 questions across 8 domains** — Governance, People, Third-party, Physical, Identity & access, Network, Data protection, Incident response
 - **Multi-framework alignment** — ISO/IEC 27001:2022, ISO/IEC 27002:2022, NIS2 Directive (EU 2022/2555), CIS Controls v8
 - **Weighted scoring** — per-question threat indicator × weight; N/A answers are excluded from the denominator
 - **Maturity bands** — Initial → Developing → Defined → Managed → Optimized (five levels, score 0–100)
 - **Severity-ranked recommendations** — gaps sorted by threat × weight
 - **Domain narratives** — free-text commentary per domain
 - **Custom questions** — add up to 2 per domain
+- **Optional draft encryption** — protect the browser-saved draft with a password (PBKDF2 + AES-GCM 256-bit); off by default
 - **PDF export** — branded report with logo, assessor name, and agency
 - **JSON save/import** — resume any assessment later; portable between devices
-- **CSV export** — gap analysis and Statement of Applicability
+- **CSV export** — gap analysis and Statement of Applicability (includes custom questions)
 - **Multilingual** — English (en) + Albanian (sq, machine-draft); additional languages can be added (see [CONTRIBUTING.md](CONTRIBUTING.md))
 - **Fully offline** — Chart.js 4.5.1 and jsPDF 4.2.1 are vendored; no CDN call at runtime
 
@@ -70,8 +71,8 @@ The tool targets **WCAG 2.1 Level AA** compliance. Keyboard navigation, ARIA lan
 
 Assessment files may contain client-confidential data. The tool has **no backend, no analytics, and makes no network requests at runtime** — everything stays on your device.
 
-- Data is stored unencrypted in browser `localStorage` while a session is in progress.
-- Exported JSON files are unencrypted.
+- By default the draft is stored unencrypted in browser `localStorage` while a session is in progress. You can optionally enable **draft encryption** (a password-derived AES-GCM key) so the saved draft is encrypted at rest — if you forget the password the draft is unrecoverable.
+- Exported JSON, CSV and PDF files are unencrypted regardless of the draft-encryption setting; handle them as confidential documents.
 - Deleting your data means clearing browser storage and deleting any exported files.
 
 See [docs/PRIVACY.md](docs/PRIVACY.md) for full details and GDPR guidance.

@@ -341,6 +341,12 @@
       radarCanvas.id     = 'obs-radar-canvas';
       radarCanvas.width  = 360;
       radarCanvas.height = 360;
+      // Expose the visualisation to assistive tech with a text summary of the
+      // per-domain scores (the canvas pixels are otherwise opaque to AT).
+      radarCanvas.setAttribute('role', 'img');
+      radarCanvas.setAttribute('aria-label',
+        t('dash.domainScores', lang) + ': ' +
+        domainLabels.map(function (lbl, k) { return lbl + ' ' + Math.round(domainData[k]) + '%'; }).join(', '));
       _radarCanvas = radarCanvas;
       radarCard.appendChild(radarCanvas);
 
@@ -348,6 +354,8 @@
       doughnutCanvas.id     = 'obs-doughnut-canvas';
       doughnutCanvas.width  = 320;
       doughnutCanvas.height = 320;
+      doughnutCanvas.setAttribute('role', 'img');
+      doughnutCanvas.setAttribute('aria-label', t('dash.statusBreakdown', lang));
       _doughnutCanvas = doughnutCanvas;
       doughnutCard.appendChild(doughnutCanvas);
 
@@ -610,7 +618,7 @@
 
         cRow.appendChild(el('span',
           'flex-shrink:0;font-size:0.65rem;color:var(--clr-text-muted);white-space:nowrap;',
-          'custom'));
+          t('cq.badge', lang)));
 
         qList.appendChild(cRow);
       }
@@ -744,8 +752,8 @@
       var rem = rec.remediation;
       if (rem) {
         var remParts = [];
-        if (rem.owner)      remParts.push('Owner: ' + rem.owner);
-        if (rem.targetDate) remParts.push('By: ' + rem.targetDate);
+        if (rem.owner)      remParts.push(t('dash.gapOwner', lang) + rem.owner);
+        if (rem.targetDate) remParts.push(t('dash.gapBy', lang) + rem.targetDate);
         if (rem.status && rem.status !== 'none') {
           remParts.push(rem.status.replace(/-/g, ' '));
         }

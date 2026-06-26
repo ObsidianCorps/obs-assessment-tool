@@ -17,6 +17,13 @@
   // ── Module-level encryption state ─────────────────────────────────
   var _cachedKey  = null;  // CryptoKey or null
   var _cachedSalt = null;  // Uint8Array or null
+  var _cachedIter = null;  // PBKDF2 iteration count used to derive _cachedKey
+
+  // PBKDF2 iteration count for new encryptions. 600k aligns with current OWASP
+  // guidance for PBKDF2-HMAC-SHA256. Older blobs record their own count in `it`
+  // (absent → LEGACY_ITER) so they remain decryptable after this bump.
+  var PBKDF2_ITER = 600000;
+  var LEGACY_ITER = 150000;
 
   // ── Async-save queue (prevents overlapping encrypt+write calls) ────
   var _saveInFlight    = false;
@@ -36,15 +43,16 @@
     return bytes;
   }
 
-  // ── Key derivation: PBKDF2(SHA-256, 150k iter) → AES-GCM-256 ─────
+  // ── Key derivation: PBKDF2(SHA-256) → AES-GCM-256 ────────────────
   // Called once on enable/unlock; derived key is cached. Never called per-keystroke.
-  function deriveKey(password, saltBytes) {
+  function deriveKey(password, saltBytes, iterations) {
+    var iter = iterations || PBKDF2_ITER;
     var enc = new TextEncoder();
     return crypto.subtle.importKey(
       'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
     ).then(function (baseKey) {
       return crypto.subtle.deriveKey(
-        { name: 'PBKDF2', salt: saltBytes, iterations: 150000, hash: 'SHA-256' },
+        { name: 'PBKDF2', salt: saltBytes, iterations: iter, hash: 'SHA-256' },
         baseKey,
         { name: 'AES-GCM', length: 256 },
         false,
@@ -55,7 +63,7 @@
 
   // ── Encrypt assessment → JSON string { enc:1, v:1, salt, iv, ct } ─
   // New random 12-byte IV per call; salt is fixed per password session.
-  function _encryptTo(key, saltBytes, assessment) {
+  function _encryptTo(key, saltBytes, iter, assessment) {
     var iv  = crypto.getRandomValues(new Uint8Array(12));
     var enc = new TextEncoder();
     var pt  = enc.encode(JSON.stringify(assessment));
@@ -64,6 +72,7 @@
         return JSON.stringify({
           enc:  1,
           v:    1,
+          it:   iter || PBKDF2_ITER,
           salt: _toB64(saltBytes),
           iv:   _toB64(iv),
           ct:   _toB64(ct)
@@ -84,15 +93,15 @@
   }
 
   // ── Encrypted-save worker with pending-queue ───────────────────────
-  function _doEncryptedSave(assessment, key, salt) {
+  function _doEncryptedSave(assessment, key, salt, iter) {
     _saveInFlight = true;
-    _encryptTo(key, salt, assessment).then(function (blob) {
+    _encryptTo(key, salt, iter, assessment).then(function (blob) {
       try { glob.localStorage.setItem(KEY, blob); } catch (e) { /* ignore */ }
       _saveInFlight = false;
       if (_pendingAssessment !== null) {
         var pending = _pendingAssessment;
         _pendingAssessment = null;
-        if (_cachedKey) _doEncryptedSave(pending, _cachedKey, _cachedSalt);
+        if (_cachedKey) _doEncryptedSave(pending, _cachedKey, _cachedSalt, _cachedIter);
       }
     }).catch(function () {
       _saveInFlight = false;
@@ -149,9 +158,14 @@
         _pendingAssessment = assessment; // queue latest state; saved after current completes
         return true;
       }
-      _doEncryptedSave(assessment, _cachedKey, _cachedSalt);
+      _doEncryptedSave(assessment, _cachedKey, _cachedSalt, _cachedIter);
       return true;
     }
+    // An encrypted draft exists but no key is cached (locked / unlock skipped).
+    // Refuse to overwrite it with plaintext — that would silently downgrade
+    // confidential data. Caller should re-prompt for the password. Return false
+    // so the UI can surface a "locked — not saving" state.
+    if (hasCrypto && isEncrypted()) return false;
     try { glob.localStorage.setItem(KEY, serialize(assessment)); return true; } catch (e) { return false; }
   }
 
@@ -190,7 +204,7 @@
   // Clears the cached key. Future saveDraft calls will fail gracefully
   // (encryption is active but no key is available), so the app should
   // stop autosaving or re-prompt for the password after calling lock().
-  function lock() { _cachedKey = null; _cachedSalt = null; }
+  function lock() { _cachedKey = null; _cachedSalt = null; _cachedIter = null; }
 
   // ── unlock ─────────────────────────────────────────────────────────
   // Derives key from the salt stored in the encrypted blob, verifies by
@@ -205,9 +219,10 @@
       try { blob = JSON.parse(v); } catch (e) { return Promise.resolve({ ok: false, error: 'Not an encrypted draft' }); }
       if (!blob || blob.enc !== 1) return Promise.resolve({ ok: false, error: 'Not an encrypted draft' });
       var salt = _fromB64(blob.salt);
-      return deriveKey(password, salt).then(function (key) {
+      var iter = blob.it || LEGACY_ITER;
+      return deriveKey(password, salt, iter).then(function (key) {
         return _decryptFrom(key, blob).then(function (result) {
-          if (result.ok) { _cachedKey = key; _cachedSalt = salt; }
+          if (result.ok) { _cachedKey = key; _cachedSalt = salt; _cachedIter = iter; }
           return result;
         });
       }).catch(function () { return { ok: false }; });
@@ -226,10 +241,10 @@
 
     if (enabled) {
       var newSalt = crypto.getRandomValues(new Uint8Array(16));
-      return deriveKey(password, newSalt).then(function (newKey) {
+      return deriveKey(password, newSalt, PBKDF2_ITER).then(function (newKey) {
         var v = glob.localStorage.getItem(KEY);
         if (!v) {
-          _cachedKey = newKey; _cachedSalt = newSalt;
+          _cachedKey = newKey; _cachedSalt = newSalt; _cachedIter = PBKDF2_ITER;
           return;
         }
         var objE;
@@ -245,20 +260,20 @@
             });
           } else {
             // No old key available; just update the cached key
-            _cachedKey = newKey; _cachedSalt = newSalt;
+            _cachedKey = newKey; _cachedSalt = newSalt; _cachedIter = PBKDF2_ITER;
             return;
           }
         } else if (objE && typeof objE.templateId === 'string') {
           getAssessment = Promise.resolve(objE);
         } else {
-          _cachedKey = newKey; _cachedSalt = newSalt;
+          _cachedKey = newKey; _cachedSalt = newSalt; _cachedIter = PBKDF2_ITER;
           return;
         }
 
         return getAssessment.then(function (assessment) {
-          _cachedKey = newKey; _cachedSalt = newSalt;
+          _cachedKey = newKey; _cachedSalt = newSalt; _cachedIter = PBKDF2_ITER;
           if (!assessment) return;
-          return _encryptTo(newKey, newSalt, assessment).then(function (blob) {
+          return _encryptTo(newKey, newSalt, PBKDF2_ITER, assessment).then(function (blob) {
             try { glob.localStorage.setItem(KEY, blob); } catch (e3) { /* ignore */ }
           });
         });
@@ -275,7 +290,7 @@
 
         var keyP = _cachedKey
           ? Promise.resolve(_cachedKey)
-          : deriveKey(password, _fromB64(blob2.salt));
+          : deriveKey(password, _fromB64(blob2.salt), blob2.it || LEGACY_ITER);
 
         return keyP.then(function (key) {
           return _decryptFrom(key, blob2).then(function (result) {
@@ -302,7 +317,7 @@
       var blob;
       try { blob = JSON.parse(v); } catch (e) { return Promise.resolve({ ok: false }); }
       if (!blob || blob.enc !== 1) return Promise.resolve({ ok: false, error: 'Not encrypted' });
-      return deriveKey(password, _fromB64(blob.salt)).then(function (key) {
+      return deriveKey(password, _fromB64(blob.salt), blob.it || LEGACY_ITER).then(function (key) {
         return _decryptFrom(key, blob);
       });
     } catch (e) {

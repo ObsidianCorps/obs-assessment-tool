@@ -21,14 +21,20 @@ Data is held in two places:
 
 | Location | When | Format |
 |---|---|---|
-| Browser `localStorage` | While a session is in progress (auto-save draft) | Unencrypted JSON |
+| Browser `localStorage` | While a session is in progress (auto-save draft) | Unencrypted JSON by default; **AES-GCM-256 encrypted** if you enable draft encryption |
 | Exported `.json` file | When you use the Export button | Unencrypted JSON |
+
+---
+
+## Optional draft encryption
+
+You can enable **draft encryption** (in the Start form, or the **Encrypt** button in the header). When enabled, the `localStorage` draft is encrypted with an AES-GCM-256 key derived from your password via PBKDF2 (600,000 iterations, SHA-256). You are prompted for the password on every page load. If you forget the password the draft is **permanently unrecoverable** — there is no reset. Exported files are never encrypted by this feature.
 
 ---
 
 ## Risks to be aware of
 
-- **localStorage is unencrypted.** Anyone with access to your browser profile — including other users of a shared workstation — can read the stored draft.
+- **localStorage is unencrypted by default.** Anyone with access to your browser profile — including other users of a shared workstation — can read the stored draft unless you enable draft encryption (above).
 - **Exported JSON files are unencrypted.** Treat them like any other confidential document: restrict access, do not share over unencrypted channels, and store them according to your organisation's data handling policy.
 - **PDF and CSV exports are also unencrypted.** Apply the same handling rules.
 

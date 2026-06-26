@@ -42,6 +42,30 @@ test('available() true and saveDraft/loadDraft round-trip when localStorage exis
     assert.deepStrictEqual(loaded.assessment.answers, a.answers);
   } finally { delete global.localStorage; }
 });
+test('saveDraft refuses to overwrite an encrypted draft with plaintext when locked', function () {
+  // Security regression (M1): if an enc:1 blob is present but no key is cached
+  // (locked / unlock skipped), saveDraft must NOT downgrade it to plaintext.
+  var store = { 'obs-assessment-draft': JSON.stringify({ enc: 1, v: 1, it: 600000, salt: 'x', iv: 'y', ct: 'z' }) };
+  global.localStorage = {
+    setItem: function (k, v) { store[k] = String(v); },
+    getItem: function (k) { return k in store ? store[k] : null; },
+    removeItem: function (k) { delete store[k]; }
+  };
+  try {
+    var a = { schemaVersion: 1, templateId: 't', templateVersion: '1', meta: {}, answers: { Q1: { status: 'compliant' } }, customQuestions: {} };
+    var hasCrypto = typeof crypto !== 'undefined' && !!(crypto && crypto.subtle);
+    var result = storage.saveDraft(a);
+    if (hasCrypto) {
+      // Guard active: refused, and the encrypted blob is untouched.
+      assert.strictEqual(result, false);
+      assert.ok(store['obs-assessment-draft'].indexOf('"enc":1') >= 0, 'encrypted blob was overwritten');
+      assert.ok(store['obs-assessment-draft'].indexOf('compliant') < 0, 'plaintext leaked into storage');
+    } else {
+      // No Web Crypto (guard not applicable in this runtime) — plaintext path.
+      assert.strictEqual(result, true);
+    }
+  } finally { delete global.localStorage; }
+});
 test('parseAssessment rejects answers: null', function () {
   const r = storage.parseAssessment('{"templateId":"t","answers":null}');
   assert.strictEqual(r.ok, false);

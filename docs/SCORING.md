@@ -65,6 +65,11 @@ This means domains with more questions or higher-weight questions have a proport
 | 4     | Managed    | 61 – 80     |
 | 5     | Optimized  | 81 – 100    |
 
+Bands are evaluated as lower-bound thresholds: a score maps to the highest band
+whose minimum it reaches. Fractional scores that fall in the integer gap between
+two bands (e.g. `20.5`, `60.5`) therefore resolve to the lower band rather than
+to no band at all.
+
 ---
 
 ## Recommendations

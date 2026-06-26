@@ -53,6 +53,25 @@ test('maturity bands map score to level', function () {
   assert.strictEqual(scoring.maturity(50, template.maturityLevels).level, 3);
 });
 
+test('maturity resolves fractional scores in the band gap (no null)', function () {
+  // Contiguous 5-band ladder with integer gaps (0–20, 21–40, …) — the old
+  // min<=score<=max lookup returned null for 20.5 / 40.5 / 60.5 / 80.5.
+  const levels = [
+    { level: 1, label: { en: 'Initial' }, min: 0, max: 20 },
+    { level: 2, label: { en: 'Developing' }, min: 21, max: 40 },
+    { level: 3, label: { en: 'Defined' }, min: 41, max: 60 },
+    { level: 4, label: { en: 'Managed' }, min: 61, max: 80 },
+    { level: 5, label: { en: 'Optimized' }, min: 81, max: 100 }
+  ];
+  assert.strictEqual(scoring.maturity(20.5, levels).level, 1);
+  assert.strictEqual(scoring.maturity(40.5, levels).level, 2);
+  assert.strictEqual(scoring.maturity(60.5, levels).level, 3);
+  assert.strictEqual(scoring.maturity(80.5, levels).level, 4);
+  assert.strictEqual(scoring.maturity(0, levels).level, 1);
+  assert.strictEqual(scoring.maturity(100, levels).level, 5);
+  assert.strictEqual(scoring.maturity(null, levels), null);
+});
+
 test('complianceSummary lists critical gaps', function () {
   const a = { answers: { Q1: { status: 'non-compliant' }, Q2: { status: 'compliant' } }, customQuestions: {} };
   const s = scoring.complianceSummary(template, a);

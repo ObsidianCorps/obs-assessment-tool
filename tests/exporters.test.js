@@ -25,3 +25,17 @@ test('csv neutralises formula injection (leading = + - @)', function () {
   assert.ok(csv.indexOf("'+SUM(A1)") >= 0, 'owner formula not neutralised');
   assert.ok(csv.indexOf("'@danger") >= 0, 'status formula not neutralised');
 });
+test('csv includes custom questions (Statement of Applicability completeness)', function () {
+  const a4 = {
+    answers: { Q1: { status: 'compliant' } },
+    customQuestions: { d1: [{ text: 'Custom control?', references: { iso27001: 'A.9.9' }, status: 'partial', partialPercent: 30, evidence: 'partial ev', remediation: { owner: 'Carol' } }] }
+  };
+  const csv = exporters.assessmentToCsv(template, a4, 'en');
+  const lines = csv.trim().split('\n');
+  assert.strictEqual(lines.length, 3, 'expected header + template row + custom row');
+  const custom = lines[2];
+  assert.ok(custom.indexOf('Custom control?') >= 0, 'custom question text missing');
+  assert.ok(custom.indexOf('A.9.9') >= 0, 'custom question reference missing');
+  assert.ok(custom.indexOf('Carol') >= 0, 'custom remediation owner missing');
+  assert.ok(custom.indexOf('partial') >= 0 && custom.indexOf('30') >= 0, 'custom status/percent missing');
+});

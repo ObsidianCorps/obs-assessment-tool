@@ -90,8 +90,11 @@
       max-width: 1160px;
       margin-inline: auto;
       padding-inline: var(--sp-6);
+      overflow-x: auto;            /* tabs scroll rather than clip on narrow phones */
+      -webkit-overflow-scrolling: touch;
     }
     .app-tab {
+      flex-shrink: 0;             /* keep full label; scroll instead of squashing */
       padding: var(--sp-3) var(--sp-6);
       font-size: var(--text-sm);
       font-weight: 600;
@@ -241,17 +244,21 @@
     }
 
     @media (max-width: 900px) {
-      .questionnaire-layout > .sidebar { display: none; }
-      .questionnaire-layout > .sidebar.is-open {
+      /* Stack the sidebar above the questions so domain navigation + progress
+         stay reachable on small screens. `display:block` is set explicitly to
+         override the lower-specificity `.sidebar { display:none }` in styles.css. */
+      .questionnaire-layout { flex-direction: column; }
+      .questionnaire-layout > .sidebar {
         display: block;
-        position: fixed;
-        inset: 0;
-        z-index: 200;
-        width: min(320px, 90vw);
-        box-shadow: var(--shadow-lg);
+        flex: 0 0 auto;
+        border-right: none;
+        border-bottom: 1px solid var(--clr-border);
+        padding-block: var(--sp-4);
       }
-      .app-toolbar button { display: none; }
-      .app-toolbar button:first-child { display: inline-flex; } /* keep Save */
+      /* Toolbar actions wrap rather than disappear, so Import/Export/Encrypt
+         remain available on mobile. */
+      .nav-right { flex-wrap: wrap; justify-content: flex-end; }
+      .app-toolbar { flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-2); }
     }
     @media (max-width: 640px) {
       .start-bg { padding: var(--sp-4); }
@@ -416,6 +423,7 @@
           <button type="button" id="btn-export-csv" data-i18n="btn.exportCsv">Export&nbsp;CSV</button>
           <button type="button" id="btn-encrypt" data-i18n="btn.encrypt">Encrypt</button>
           <span id="enc-lock-indicator" class="enc-lock-badge" hidden aria-live="polite">&#128274;&nbsp;Encrypted</span>
+          <span id="autosave-status" class="visually-hidden" role="status" aria-live="polite"></span>
         </div>
       </div>
     </nav>
@@ -487,7 +495,7 @@
   </nav>
 
   <!-- ── Tab panels ──────────────────────────── -->
-  <div id="app-main">
+  <div id="app-main" tabindex="-1">
 
     <!-- START ─────────────────────────────────── -->
     <section id="tab-start" role="tabpanel" aria-labelledby="tab-btn-start">
@@ -547,19 +555,20 @@
           </div>
 
           <hr class="form-divider">
-          <span class="form-section-label">Draft security <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.8em">(optional)</span></span>
+          <span class="form-section-label"><span data-i18n="enc.section">Draft security</span> <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.8em" data-i18n="enc.optional">(optional)</span></span>
 
           <div class="form-group">
             <label class="enc-toggle-label">
               <input type="checkbox" id="enc-enable-checkbox">
-              Encrypt saved draft
+              <span data-i18n="enc.toggleLabel">Encrypt saved draft</span>
             </label>
-            <p class="form-hint">
+            <p class="form-hint" data-i18n="enc.toggleHint">
               When enabled, the browser-saved draft is protected with AES-GCM (256-bit) encryption and
               a password is required on every page load.
-              <strong>If you forget your password, the draft is permanently unrecoverable.</strong>
+              If you forget your password, the draft is permanently unrecoverable.
               Exported JSON files are not encrypted by this feature.
             </p>
+            <p id="enc-locked-warning" class="enc-error" role="status" hidden data-i18n="enc.lockedNotSaving">🔒 Locked — changes are not being saved. Unlock the draft or start fresh.</p>
           </div>
 
           <hr class="form-divider">
@@ -652,41 +661,41 @@
 
   <!-- ── Unlock dialog (shown on load when draft is encrypted) ── -->
   <dialog id="enc-unlock-dialog" aria-labelledby="enc-unlock-heading" aria-modal="true">
-    <h2 id="enc-unlock-heading">Draft is encrypted</h2>
-    <p class="enc-dialog-desc">Your saved draft is password-protected. Enter the password you chose when you enabled encryption to unlock it.</p>
+    <h2 id="enc-unlock-heading" data-i18n="enc.unlockTitle">Draft is encrypted</h2>
+    <p class="enc-dialog-desc" data-i18n="enc.unlockDesc">Your saved draft is password-protected. Enter the password you chose when you enabled encryption to unlock it.</p>
     <div class="form-group">
-      <label for="enc-unlock-password" style="display:block;font-size:var(--text-sm);font-weight:600;color:var(--clr-text);margin-bottom:var(--sp-2)">Password</label>
+      <label for="enc-unlock-password" data-i18n="enc.passwordLabel" style="display:block;font-size:var(--text-sm);font-weight:600;color:var(--clr-text);margin-bottom:var(--sp-2)">Password</label>
       <input type="password" id="enc-unlock-password" autocomplete="current-password"
              style="width:100%;padding:var(--sp-3) var(--sp-4);border:1px solid var(--clr-border);border-radius:var(--radius);font-size:var(--text-base);font-family:var(--font-sans);color:var(--clr-text);background:var(--clr-surface)">
     </div>
     <p id="enc-unlock-error" class="enc-error" hidden>Incorrect password. Please try again.</p>
     <div class="enc-dialog-actions">
-      <button type="button" id="enc-unlock-submit" class="btn-primary btn-sm">Unlock</button>
-      <button type="button" id="enc-unlock-skip" class="btn-secondary btn-sm">Start without draft</button>
+      <button type="button" id="enc-unlock-submit" class="btn-primary btn-sm" data-i18n="enc.unlockBtn">Unlock</button>
+      <button type="button" id="enc-unlock-skip" class="btn-secondary btn-sm" data-i18n="enc.skipBtn">Start without draft</button>
     </div>
   </dialog>
 
   <!-- ── Enable-encryption dialog ─────────────────────────── -->
   <dialog id="enc-enable-dialog" aria-labelledby="enc-enable-heading" aria-modal="true">
-    <h2 id="enc-enable-heading">Enable draft encryption</h2>
-    <p class="enc-dialog-desc">Your draft will be encrypted with AES-GCM (256-bit). Choose a strong password &#8212; it will be required every time you open this tool.</p>
+    <h2 id="enc-enable-heading" data-i18n="enc.enableTitle">Enable draft encryption</h2>
+    <p class="enc-dialog-desc" data-i18n="enc.enableDesc">Your draft will be encrypted with AES-GCM (256-bit). Choose a strong password &#8212; it will be required every time you open this tool.</p>
     <div class="enc-warning-box" role="note">
-      <strong>Important:</strong> If you forget your password, your draft is permanently unrecoverable &#8212; there is no reset or recovery option. Exported JSON files remain plaintext unless separately protected.
+      <strong data-i18n="enc.importantPrefix">Important:</strong> <span data-i18n="enc.warnBody">If you forget your password, your draft is permanently unrecoverable &#8212; there is no reset or recovery option. Exported JSON files remain plaintext unless separately protected.</span>
     </div>
     <div class="form-group">
-      <label for="enc-password-1" style="display:block;font-size:var(--text-sm);font-weight:600;color:var(--clr-text);margin-bottom:var(--sp-2)">Password</label>
+      <label for="enc-password-1" data-i18n="enc.passwordLabel" style="display:block;font-size:var(--text-sm);font-weight:600;color:var(--clr-text);margin-bottom:var(--sp-2)">Password</label>
       <input type="password" id="enc-password-1" autocomplete="new-password"
              style="width:100%;padding:var(--sp-3) var(--sp-4);border:1px solid var(--clr-border);border-radius:var(--radius);font-size:var(--text-base);font-family:var(--font-sans);color:var(--clr-text);background:var(--clr-surface)">
     </div>
     <div class="form-group">
-      <label for="enc-password-2" style="display:block;font-size:var(--text-sm);font-weight:600;color:var(--clr-text);margin-bottom:var(--sp-2)">Confirm password</label>
+      <label for="enc-password-2" data-i18n="enc.confirmLabel" style="display:block;font-size:var(--text-sm);font-weight:600;color:var(--clr-text);margin-bottom:var(--sp-2)">Confirm password</label>
       <input type="password" id="enc-password-2" autocomplete="new-password"
              style="width:100%;padding:var(--sp-3) var(--sp-4);border:1px solid var(--clr-border);border-radius:var(--radius);font-size:var(--text-base);font-family:var(--font-sans);color:var(--clr-text);background:var(--clr-surface)">
     </div>
     <p id="enc-enable-error" class="enc-error" hidden></p>
     <div class="enc-dialog-actions">
-      <button type="button" id="enc-enable-submit" class="btn-primary btn-sm">Enable encryption</button>
-      <button type="button" id="enc-enable-cancel" class="btn-secondary btn-sm">Cancel</button>
+      <button type="button" id="enc-enable-submit" class="btn-primary btn-sm" data-i18n="enc.enableBtn">Enable encryption</button>
+      <button type="button" id="enc-enable-cancel" class="btn-secondary btn-sm" data-i18n="enc.cancel">Cancel</button>
     </div>
   </dialog>
 

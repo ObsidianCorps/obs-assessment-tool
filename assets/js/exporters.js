@@ -41,17 +41,28 @@
   function assessmentToCsv(template, assessment, lang) {
     var header = ['Domain', 'Control', 'Question', 'Applicable', 'Status', 'PartialPercent', 'Justification', 'Evidence', 'Threat', 'RemediationOwner', 'RemediationTarget', 'RemediationStatus'];
     var rows = [header.map(esc).join(',')];
+    // `ans` carries the answer fields. For template questions it is answers[q.id];
+    // for custom questions the fields live on the custom object itself (mirrors
+    // scoring.effectiveQuestions), so we pass the custom entry as both q and ans.
+    function pushRow(d, refs, text, threat, ans) {
+      var a = ans || {};
+      var rem = a.remediation || {};
+      rows.push([
+        i18n.pick(d.title, lang), refStr(refs), i18n.pick(text, lang),
+        a.status === 'na' ? 'N' : 'Y', a.status || 'unanswered',
+        a.status === 'partial' ? (a.partialPercent == null ? 50 : a.partialPercent) : '',
+        a.naReason || '', a.evidence || '', threat,
+        rem.owner || '', rem.targetDate || '', rem.status || ''
+      ].map(esc).join(','));
+    }
     template.domains.forEach(function (d) {
       d.questions.forEach(function (q) {
-        var a = (assessment.answers || {})[q.id] || {};
-        var rem = a.remediation || {};
-        rows.push([
-          i18n.pick(d.title, lang), refStr(q.references), i18n.pick(q.text, lang),
-          a.status === 'na' ? 'N' : 'Y', a.status || 'unanswered',
-          a.status === 'partial' ? (a.partialPercent == null ? 50 : a.partialPercent) : '',
-          a.naReason || '', a.evidence || '', q.threatIndicator,
-          rem.owner || '', rem.targetDate || '', rem.status || ''
-        ].map(esc).join(','));
+        pushRow(d, q.references, q.text, q.threatIndicator, (assessment.answers || {})[q.id] || {});
+      });
+      // Custom questions are scored and shown in every other output; include them here too.
+      var customs = (assessment.customQuestions || {})[d.id] || [];
+      customs.forEach(function (c) {
+        if (c && (c.text || c.status)) pushRow(d, c.references, c.text, (c.threatIndicator == null ? 3 : c.threatIndicator), c);
       });
     });
     return rows.join('\n');
@@ -281,14 +292,20 @@
           doc.text(narLines, M, yD); yD += narLines.length * 12 + 8;
         }
 
-        // Gather template questions + any custom questions for this domain
-        var allQs = (domain.questions || []).slice();
+        // Gather template questions + any custom questions for this domain.
+        // Template answers come from answers[id]; custom-question answer fields
+        // live on the custom object itself (mirrors scoring.effectiveQuestions).
+        var rowsSrc = (domain.questions || []).map(function (q) {
+          return { id: q.id, text: q.text, ans: (assessment.answers || {})[q.id] || {} };
+        });
         var customQs = (assessment.customQuestions && assessment.customQuestions[domain.id]) || [];
-        allQs = allQs.concat(customQs);
+        customQs.forEach(function (c, ci) {
+          if (c && (c.text || c.status)) rowsSrc.push({ id: 'custom-' + domain.id + '-' + (ci + 1), text: c.text, ans: c });
+        });
 
         // Build table rows
-        var qBody = allQs.map(function (q) {
-          var a = (assessment.answers || {})[q.id] || {};
+        var qBody = rowsSrc.map(function (r) {
+          var a = r.ans || {};
           var statusLbl = statusLabel(a.status, lang);
           if (a.status === 'partial') {
             statusLbl = t('status.partial', lang) + ' (' + (a.partialPercent == null ? 50 : a.partialPercent) + '%)';
@@ -296,8 +313,8 @@
           var rem = a.remediation || {};
           var remTxt = [rem.owner, rem.targetDate, rem.status].filter(Boolean).join(' / ');
           return [
-            String(q.id || ''),
-            I.pick(q.text, lang),
+            String(r.id || ''),
+            I.pick(r.text, lang),
             statusLbl,
             a.naReason || '',
             a.evidence || '',

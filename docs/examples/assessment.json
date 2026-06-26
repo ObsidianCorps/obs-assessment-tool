@@ -13,20 +13,20 @@
   "answers": {
     "Q1": {
       "status": "compliant",
-      "notes": "Information security policy approved by the CEO in January 2026 and communicated to all staff via the intranet."
+      "evidence": "Information security policy approved by the CEO in January 2026 and communicated to all staff via the intranet."
     },
     "Q2": {
       "status": "partial",
       "partialPercent": 60,
-      "notes": "An asset inventory exists for servers and network equipment but laptops and mobile devices are not fully covered."
+      "evidence": "An asset inventory exists for servers and network equipment but laptops and mobile devices are not fully covered."
     },
     "Q3": {
       "status": "non-compliant",
-      "notes": "No compliance register is maintained. Legal obligations are tracked informally by the CFO.",
+      "evidence": "No compliance register is maintained. Legal obligations are tracked informally by the CFO. Action: create and maintain a register of applicable legal, regulatory, and contractual obligations with a named owner and quarterly reviews.",
       "remediation": {
         "owner": "CFO / Legal",
-        "dueDate": "2026-09-30",
-        "description": "Create and maintain a register of applicable legal, regulatory, and contractual obligations. Assign a named owner and schedule quarterly reviews."
+        "targetDate": "2026-09-30",
+        "status": "planned"
       }
     },
     "Q4": {

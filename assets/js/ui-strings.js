@@ -199,6 +199,8 @@
     'ed.addDomain':           { en: '+ Add domain',              sq: '+ Shto fushë' },
     'ed.addQuestion':         { en: '+ Add question',            sq: '+ Shto pyetje' },
     'ed.delete':              { en: 'Delete',                    sq: 'Fshi' },
+    'ed.moveUp':              { en: 'Move up',                   sq: 'Lëviz lart' },
+    'ed.moveDown':            { en: 'Move down',                 sq: 'Lëviz poshtë' },
     'ed.domTitleEn':          { en: 'Domain title (EN)',          sq: 'Titulli i fushës (EN)' },
     'ed.domTitleSq':          { en: 'Domain title (SQ)',          sq: 'Titulli i fushës (SQ)' },
     'ed.questionId':          { en: 'Question ID',               sq: 'ID e pyetjes' },
@@ -227,6 +229,49 @@
     'ed.registeredMsg1':      { en: 'Template “',           sq: 'Shablloni “' },
     'ed.registeredMsg2':      { en: '” registered. Go to the Start tab to begin a new assessment with it.',
                                 sq: '” u regjistrua. Shkoni te skeda Fillimi për të filluar një vlerësim të ri me të.' },
+
+    // ── Draft encryption (section, dialogs, dynamic messages) ───────
+    'enc.section':            { en: 'Draft security',           sq: 'Siguria e draftit' },
+    'enc.optional':           { en: '(optional)',               sq: '(opsionale)' },
+    'enc.toggleLabel':        { en: 'Encrypt saved draft',      sq: 'Enkripto draftin e ruajtur' },
+    'enc.toggleHint':         { en: 'When enabled, the browser-saved draft is protected with AES-GCM (256-bit) encryption and a password is required on every page load. If you forget your password, the draft is permanently unrecoverable. Exported JSON files are not encrypted by this feature.',
+                                sq: 'Kur aktivizohet, drafti i ruajtur në shfletues mbrohet me enkriptim AES-GCM (256-bit) dhe kërkohet një fjalëkalim në çdo hapje të faqes. Nëse harroni fjalëkalimin, drafti është përgjithmonë i parikuperueshëm. Skedarët JSON të eksportuar nuk enkriptohen nga ky funksion.' },
+    'enc.unlockTitle':        { en: 'Draft is encrypted',       sq: 'Drafti është i enkriptuar' },
+    'enc.unlockDesc':         { en: 'Your saved draft is password-protected. Enter the password you chose when you enabled encryption to unlock it.',
+                                sq: 'Drafti juaj i ruajtur është i mbrojtur me fjalëkalim. Shkruani fjalëkalimin që zgjodhët kur aktivizuat enkriptimin për ta zhbllokuar.' },
+    'enc.passwordLabel':      { en: 'Password',                 sq: 'Fjalëkalimi' },
+    'enc.confirmLabel':       { en: 'Confirm password',         sq: 'Konfirmo fjalëkalimin' },
+    'enc.unlockBtn':          { en: 'Unlock',                   sq: 'Zhblloko' },
+    'enc.skipBtn':            { en: 'Start without draft',      sq: 'Fillo pa draft' },
+    'enc.enableTitle':        { en: 'Enable draft encryption',  sq: 'Aktivizo enkriptimin e draftit' },
+    'enc.enableDesc':         { en: 'Your draft will be encrypted with AES-GCM (256-bit). Choose a strong password — it will be required every time you open this tool.',
+                                sq: 'Drafti juaj do të enkriptohet me AES-GCM (256-bit). Zgjidhni një fjalëkalim të fortë — do të kërkohet sa herë që hapni këtë mjet.' },
+    'enc.importantPrefix':    { en: 'Important:',               sq: 'E rëndësishme:' },
+    'enc.warnBody':           { en: 'If you forget your password, your draft is permanently unrecoverable — there is no reset or recovery option. Exported JSON files remain plaintext unless separately protected.',
+                                sq: 'Nëse harroni fjalëkalimin, drafti juaj është përgjithmonë i parikuperueshëm — nuk ka opsion rivendosjeje apo rikuperimi. Skedarët JSON të eksportuar mbeten tekst i thjeshtë nëse nuk mbrohen veçmas.' },
+    'enc.enableBtn':          { en: 'Enable encryption',        sq: 'Aktivizo enkriptimin' },
+    'enc.cancel':             { en: 'Cancel',                   sq: 'Anulo' },
+    'enc.enabling':           { en: 'Enabling…',                sq: 'Duke aktivizuar…' },
+    'enc.unlocking':          { en: 'Unlocking…',               sq: 'Duke zhbllokuar…' },
+    'enc.errEnterPw':         { en: 'Please enter a password.', sq: 'Ju lutem shkruani një fjalëkalim.' },
+    'enc.errMismatch':        { en: 'Passwords do not match. Please re-enter.', sq: 'Fjalëkalimet nuk përputhen. Ju lutem rishkruani.' },
+    'enc.errTooShort':        { en: 'Password must be at least 8 characters.', sq: 'Fjalëkalimi duhet të jetë të paktën 8 karaktere.' },
+    'enc.errEnabling':        { en: 'Error enabling encryption: ', sq: 'Gabim gjatë aktivizimit të enkriptimit: ' },
+    'enc.errEnterUnlockPw':   { en: 'Please enter your password.', sq: 'Ju lutem shkruani fjalëkalimin tuaj.' },
+    'enc.errIncorrect':       { en: 'Incorrect password. Please try again.', sq: 'Fjalëkalim i pasaktë. Ju lutem provoni përsëri.' },
+    'enc.errGeneric':         { en: 'An error occurred. Please try again.', sq: 'Ndodhi një gabim. Ju lutem provoni përsëri.' },
+    'enc.errUnlockFirst':     { en: 'Please unlock the draft first before disabling encryption.', sq: 'Ju lutem zhbllokoni fillimisht draftin para se të çaktivizoni enkriptimin.' },
+    'enc.lockedNotSaving':    { en: '🔒 Locked — changes are not being saved. Unlock the draft or start fresh.', sq: '🔒 I kyçur — ndryshimet nuk po ruhen. Zhbllokoni draftin ose filloni nga e para.' },
+
+    // ── Autosave status (aria-live) ─────────────────────────────────
+    'autosave.saved':         { en: 'All changes saved',        sq: 'Të gjitha ndryshimet u ruajtën' },
+
+    // ── Confirmations ───────────────────────────────────────────────
+    'confirm.discardDraft':   { en: 'Discard the saved draft and start fresh? This cannot be undone.', sq: 'Të hidhet drafti i ruajtur dhe të fillohet nga e para? Ky veprim nuk mund të zhbëhet.' },
+
+    // ── Dashboard gaps table (inline labels) ────────────────────────
+    'dash.gapOwner':          { en: 'Owner: ',                  sq: 'Pronari: ' },
+    'dash.gapBy':             { en: 'By: ',                     sq: 'Deri: ' },
 
     // ── PDF section headings & column headers ───────────────────────
     'pdf.subheader':          { en: 'Information Security Assessment Report',

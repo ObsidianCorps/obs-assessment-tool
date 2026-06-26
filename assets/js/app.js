@@ -35,9 +35,31 @@
     autosave();
   }
 
+  var _saveStatusTimer = null;
+  function encryptedButLocked() {
+    return typeof OBS.storage.isEncrypted === 'function' &&
+           OBS.storage.isEncrypted() && !OBS.storage.isUnlocked();
+  }
   function autosave() {
-    if (app.assessment) {
-      OBS.storage.saveDraft(app.assessment);
+    if (!app.assessment) return;
+    var ok = OBS.storage.saveDraft(app.assessment);
+    var statusEl   = document.getElementById('autosave-status');
+    var lockedWarn = document.getElementById('enc-locked-warning');
+    if (!ok && encryptedButLocked()) {
+      // Draft is encrypted but locked — saveDraft refused to write plaintext.
+      // Surface a visible "not saving" state instead of silently dropping data.
+      if (lockedWarn) lockedWarn.hidden = false;
+      if (statusEl) statusEl.textContent = OBS.ui.t('enc.lockedNotSaving', app.lang);
+      return;
+    }
+    if (lockedWarn) lockedWarn.hidden = true;
+    if (statusEl) {
+      // Debounce the polite announcement so screen readers aren't spammed on
+      // every keystroke; announce shortly after typing settles.
+      if (_saveStatusTimer) clearTimeout(_saveStatusTimer);
+      _saveStatusTimer = setTimeout(function () {
+        statusEl.textContent = OBS.ui.t('autosave.saved', app.lang);
+      }, 700);
     }
   }
 
@@ -111,6 +133,8 @@
     for (var j = 0; j < tabs.length; j++) {
       var isActive = tabs[j].getAttribute('data-tab') === name;
       tabs[j].setAttribute('aria-selected', isActive ? 'true' : 'false');
+      // Roving tabindex: only the selected tab is in the Tab order (APG pattern).
+      tabs[j].setAttribute('tabindex', isActive ? '0' : '-1');
       if (isActive) {
         tabs[j].classList.add('is-active');
       } else {
@@ -224,12 +248,19 @@
     // Restore brand colour picker and sync pending state
     if (bc) bc.value = meta.brandColor || '#0f213d';
     pendingBrandColor = meta.brandColor || '';
-    // Restore logo preview and sync pending state
+    // Restore logo preview and sync pending state. Only accept data: image URLs
+    // (the sole legitimate value — uploads use readAsDataURL). An imported file
+    // could otherwise carry an http(s) URL that would trigger an outbound request
+    // when assigned to img.src under file:// (where no CSP applies).
+    var safeLogo = (typeof meta.logo === 'string' && /^data:image\//i.test(meta.logo)) ? meta.logo : null;
+    if (meta.logo && !safeLogo && app.assessment && app.assessment.meta) {
+      app.assessment.meta.logo = null; // drop the unsafe value so it can't be re-exported
+    }
     if (lp) {
-      if (meta.logo) {
-        lp.src = meta.logo;
+      if (safeLogo) {
+        lp.src = safeLogo;
         lp.hidden = false;
-        pendingLogo = meta.logo;
+        pendingLogo = safeLogo;
       } else {
         lp.src = '';
         lp.hidden = true;
@@ -947,6 +978,9 @@
     // Header "Encrypt" button is the discoverable entry point: show it only when
     // encryption is NOT yet enabled (when enabled, the "Encrypted" badge shows).
     if (encBtn) encBtn.hidden = enc;
+    // Locked-and-not-saving warning: visible only while encrypted but locked.
+    var lockedWarn = document.getElementById('enc-locked-warning');
+    if (lockedWarn) lockedWarn.hidden = !(enc && !unlocked);
   }
 
   // Load the decrypted draft into the app exactly like the resume-draft flow.
@@ -999,7 +1033,7 @@
           // User wants to disable
           if (!OBS.storage.isUnlocked()) {
             checkbox.checked = true; // revert
-            alert('Please unlock the draft first before disabling encryption.');
+            alert(OBS.ui.t('enc.errUnlockFirst', app.lang));
             return;
           }
           checkbox.disabled = true;
@@ -1032,30 +1066,34 @@
         var pw1 = pw1El ? pw1El.value : '';
         var pw2 = pw2El ? pw2El.value : '';
         if (!pw1) {
-          if (enableError) { enableError.textContent = 'Please enter a password.'; enableError.hidden = false; }
+          if (enableError) { enableError.textContent = OBS.ui.t('enc.errEnterPw', app.lang); enableError.hidden = false; }
+          return;
+        }
+        if (pw1.length < 8) {
+          if (enableError) { enableError.textContent = OBS.ui.t('enc.errTooShort', app.lang); enableError.hidden = false; }
           return;
         }
         if (pw1 !== pw2) {
-          if (enableError) { enableError.textContent = 'Passwords do not match. Please re-enter.'; enableError.hidden = false; }
+          if (enableError) { enableError.textContent = OBS.ui.t('enc.errMismatch', app.lang); enableError.hidden = false; }
           return;
         }
         if (enableError) enableError.hidden = true;
         enableSubmit.disabled = true;
-        enableSubmit.textContent = 'Enabling…';
+        enableSubmit.textContent = OBS.ui.t('enc.enabling', app.lang);
         OBS.storage.setEncryption(true, pw1).then(function () {
           if (enableDialog) enableDialog.close();
           enableSubmit.disabled = false;
-          enableSubmit.textContent = 'Enable encryption';
+          enableSubmit.textContent = OBS.ui.t('enc.enableBtn', app.lang);
           if (pw1El) pw1El.value = '';
           if (pw2El) pw2El.value = '';
           updateEncryptionUI();
         }).catch(function (e) {
           if (enableError) {
-            enableError.textContent = 'Error enabling encryption: ' + (e && e.message ? e.message : String(e));
+            enableError.textContent = OBS.ui.t('enc.errEnabling', app.lang) + (e && e.message ? e.message : String(e));
             enableError.hidden = false;
           }
           enableSubmit.disabled = false;
-          enableSubmit.textContent = 'Enable encryption';
+          enableSubmit.textContent = OBS.ui.t('enc.enableBtn', app.lang);
         });
       });
     }
@@ -1087,28 +1125,28 @@
       unlockSubmit.addEventListener('click', function () {
         var pw = unlockPwEl ? unlockPwEl.value : '';
         if (!pw) {
-          if (unlockError) { unlockError.textContent = 'Please enter your password.'; unlockError.hidden = false; }
+          if (unlockError) { unlockError.textContent = OBS.ui.t('enc.errEnterUnlockPw', app.lang); unlockError.hidden = false; }
           return;
         }
         if (unlockError) unlockError.hidden = true;
         unlockSubmit.disabled = true;
-        unlockSubmit.textContent = 'Unlocking…';
+        unlockSubmit.textContent = OBS.ui.t('enc.unlocking', app.lang);
         OBS.storage.unlock(pw).then(function (result) {
           unlockSubmit.disabled = false;
-          unlockSubmit.textContent = 'Unlock';
+          unlockSubmit.textContent = OBS.ui.t('enc.unlockBtn', app.lang);
           if (result.ok) {
             if (unlockPwEl) unlockPwEl.value = '';
             if (unlockDialog) unlockDialog.close();
             resumeEncryptedDraft(result.assessment);
             updateEncryptionUI();
           } else {
-            if (unlockError) { unlockError.textContent = 'Incorrect password. Please try again.'; unlockError.hidden = false; }
+            if (unlockError) { unlockError.textContent = OBS.ui.t('enc.errIncorrect', app.lang); unlockError.hidden = false; }
             if (unlockPwEl) { unlockPwEl.value = ''; unlockPwEl.focus(); }
           }
         }).catch(function () {
           unlockSubmit.disabled = false;
-          unlockSubmit.textContent = 'Unlock';
-          if (unlockError) { unlockError.textContent = 'An error occurred. Please try again.'; unlockError.hidden = false; }
+          unlockSubmit.textContent = OBS.ui.t('enc.unlockBtn', app.lang);
+          if (unlockError) { unlockError.textContent = OBS.ui.t('enc.errGeneric', app.lang); unlockError.hidden = false; }
         });
       });
     }
@@ -1202,6 +1240,8 @@
           });
 
           document.getElementById('btn-discard-draft').addEventListener('click', function () {
+            // Irreversible — confirm before deleting the saved draft.
+            if (!window.confirm(OBS.ui.t('confirm.discardDraft', app.lang))) return;
             draftBanner.hidden = true;
             // Clear the draft key so it won't be offered again
             try { localStorage.removeItem('obs-assessment-draft'); } catch (e) { /* ignore */ }
@@ -1242,6 +1282,20 @@
             if (editorPanel) OBS.editor.render(editorPanel);
           }
         }
+      });
+      // Keyboard navigation for the tablist (WAI-ARIA APG): Arrow keys move
+      // between tabs (focus follows, activation included), Home/End jump to ends.
+      tabBtns[ti].addEventListener('keydown', function (e) {
+        var idx = Array.prototype.indexOf.call(tabBtns, this);
+        var next = -1;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = (idx + 1) % tabBtns.length;
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = (idx - 1 + tabBtns.length) % tabBtns.length;
+        else if (e.key === 'Home') next = 0;
+        else if (e.key === 'End') next = tabBtns.length - 1;
+        if (next < 0) return;
+        e.preventDefault();
+        tabBtns[next].focus();
+        tabBtns[next].click();
       });
     }
 

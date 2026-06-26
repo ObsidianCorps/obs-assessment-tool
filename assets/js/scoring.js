@@ -69,12 +69,19 @@
     return { answered: answered, total: total, percent: total ? (answered / total) * 100 : 0 };
   }
 
+  // Map a 0–100 score to a maturity band. Bands are treated as lower-bound
+  // thresholds (highest `min` that the score reaches wins), so fractional
+  // scores that fall in the integer gap between two bands' max/min (e.g. 20.5,
+  // 60.5) still resolve to a level instead of returning null. Levels are
+  // assumed authored in ascending `min` order.
   function maturity(score, levels) {
-    if (score == null) return null;
+    if (score == null || !levels || !levels.length) return null;
+    var chosen = null;
     for (var i = 0; i < levels.length; i++) {
-      if (score >= levels[i].min && score <= levels[i].max) return { level: levels[i].level, label: levels[i].label };
+      if (score >= levels[i].min) chosen = levels[i];
     }
-    return null;
+    if (!chosen) chosen = levels[0];
+    return { level: chosen.level, label: chosen.label };
   }
 
   function complianceSummary(template, assessment) {

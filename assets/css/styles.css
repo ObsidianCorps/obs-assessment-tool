@@ -24,12 +24,14 @@
   --clr-border:      #cbd5e1;
   --clr-border-focus:#1c5db0;
 
-  /* Status colours */
-  --clr-compliant:   #16a34a;
+  /* Status colours. Greens/ambers darkened so they meet WCAG 1.4.3 (≥4.5:1
+     on white) when used as small text (threat badges, risk-band labels,
+     domain score %), while still reading well as borders/accents. */
+  --clr-compliant:   #15803d;
   --clr-compliant-bg:#f0fdf4;
   --clr-partial:     #7c3aed;
   --clr-partial-bg:  #faf5ff;
-  --clr-warning:     #d97706;
+  --clr-warning:     #b45309;
   --clr-warning-bg:  #fffbeb;
   --clr-danger:      #dc2626;
   --clr-danger-bg:   #fef2f2;
@@ -651,7 +653,7 @@ a:hover { color: var(--clr-accent-hover); }
   align-items: center;
   gap: var(--sp-3);
   font-size: var(--text-sm);
-  color: rgba(248 250 252 / 0.45);
+  color: rgba(248 250 252 / 0.65);
 }
 
 /* ── ─────────────────────────────────────────────────────── */
@@ -1024,6 +1026,26 @@ a:hover { color: var(--clr-accent-hover); }
   .footer-inner { flex-direction: column; align-items: flex-start; }
   .steps { gap: var(--sp-10); }
   .step { padding-left: var(--sp-14); }
+}
+
+/* ── Disabled button state (primary/secondary/small) ─────── */
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-sm:disabled,
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Reduced-motion: honour the user's OS preference ─────── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ── Questionnaire: sidebar domain buttons ───────────────── */

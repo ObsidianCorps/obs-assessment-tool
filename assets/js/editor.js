@@ -147,29 +147,29 @@
   /* ── Delegated field-change handler ─────────────────────── */
 
   function onFieldChange(e) {
-    var t = e.target;
-    var path = t.getAttribute('data-ed-path');
+    var tgt = e.target;
+    var path = tgt.getAttribute('data-ed-path');
     if (!path || !wc) return;
-    var isArray = t.getAttribute('data-ed-type') === 'array';
+    var isArray = tgt.getAttribute('data-ed-type') === 'array';
     var value;
-    if (t.type === 'checkbox') {
-      value = t.checked;
+    if (tgt.type === 'checkbox') {
+      value = tgt.checked;
     } else if (isArray) {
-      value = t.value
+      value = tgt.value
         .split('\n')
         .map(function (s) { return s.trim(); })
         .filter(Boolean);
-    } else if (t.type === 'number') {
-      value = t.value !== '' ? Number(t.value) : null;
+    } else if (tgt.type === 'number') {
+      value = tgt.value !== '' ? Number(tgt.value) : null;
     } else {
-      value = t.value;
+      value = tgt.value;
     }
     setPathValue(wc, path, value);
     // Update domain/question preview text in summary without full re-render
-    var previewTarget = t.getAttribute('data-ed-preview-target');
+    var previewTarget = tgt.getAttribute('data-ed-preview-target');
     if (previewTarget) {
       var previewEl = document.getElementById(previewTarget);
-      if (previewEl) previewEl.textContent = t.value || '(unnamed)';
+      if (previewEl) previewEl.textContent = tgt.value || t('ed.unnamedDomain');
     }
   }
 
@@ -218,11 +218,14 @@
     return el;
   }
 
-  function makeBtn(text, className, handler) {
+  function makeBtn(text, className, handler, ariaLabel) {
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = className;
     btn.textContent = text;
+    // Icon-only buttons (e.g. ▲ ▼) get an accessible name so screen readers
+    // don't announce the bare glyph.
+    if (ariaLabel) btn.setAttribute('aria-label', ariaLabel);
     if (handler) btn.addEventListener('click', handler);
     return btn;
   }
@@ -559,7 +562,7 @@
         wc.domains[di - 1] = wc.domains[di];
         wc.domains[di] = tmp;
         rerender(states);
-      }));
+      }, t('ed.moveUp')));
     }
     if (di < totalDomains - 1) {
       moveBtns.appendChild(makeBtn('▼', 'editor-icon-btn', function (e) {
@@ -569,7 +572,7 @@
         wc.domains[di + 1] = wc.domains[di];
         wc.domains[di] = tmp2;
         rerender(states);
-      }));
+      }, t('ed.moveDown')));
     }
     summary.appendChild(moveBtns);
 
@@ -678,7 +681,7 @@
         var qs = wc.domains[di].questions;
         var tmp = qs[qi - 1]; qs[qi - 1] = qs[qi]; qs[qi] = tmp;
         rerender(states);
-      }));
+      }, t('ed.moveUp')));
     }
     if (qi < totalQ - 1) {
       qMoveBtns.appendChild(makeBtn('▼', 'editor-icon-btn', function (e) {
@@ -687,7 +690,7 @@
         var qs2 = wc.domains[di].questions;
         var tmp2 = qs2[qi + 1]; qs2[qi + 1] = qs2[qi]; qs2[qi] = tmp2;
         rerender(states);
-      }));
+      }, t('ed.moveDown')));
     }
     summary.appendChild(qMoveBtns);
 
@@ -764,7 +767,7 @@
     var enTextTa = makeTextarea('ed-q-' + qKey + '-text-en', basePath + '.text.en', (q.text && q.text.en) || '', 3);
     enTextTa.setAttribute('data-ed-preview-target', previewId);
     enTextTa.addEventListener('input', function () {
-      preview.textContent = enTextTa.value || '(no text yet)';
+      preview.textContent = enTextTa.value || t('ed.noTextYet');
     });
     makeField(textGrid, t('ed.qTextEn'), enTextTa, 'ed-q-' + qKey + '-text-en');
 
