@@ -306,6 +306,90 @@
       gap: var(--sp-3);
       justify-content: flex-end;
     }
+
+    /* ── Encryption UI ───────────────────────────────────── */
+    .enc-lock-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-1);
+      padding: var(--sp-1) var(--sp-3);
+      background: rgba(22, 163, 74, 0.20);
+      border: 1px solid rgba(22, 163, 74, 0.45);
+      border-radius: var(--radius-sm);
+      color: #bbf7d0;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    #enc-unlock-dialog,
+    #enc-enable-dialog {
+      border: 1px solid var(--clr-border);
+      border-radius: var(--radius-lg);
+      padding: var(--sp-6) var(--sp-8);
+      box-shadow: var(--shadow-lg);
+      max-width: 440px;
+      width: 90vw;
+      background: var(--clr-surface);
+      color: var(--clr-text);
+    }
+    #enc-unlock-dialog::backdrop,
+    #enc-enable-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.45);
+    }
+    #enc-unlock-dialog h2,
+    #enc-enable-dialog h2 {
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--clr-navy);
+      margin-bottom: var(--sp-4);
+    }
+    .enc-dialog-desc {
+      font-size: var(--text-sm);
+      color: var(--clr-text-muted);
+      line-height: 1.55;
+      margin-bottom: var(--sp-4);
+    }
+    .enc-warning-box {
+      background: var(--clr-warning-bg);
+      border: 1px solid rgba(217, 119, 6, 0.30);
+      border-radius: var(--radius);
+      padding: var(--sp-3) var(--sp-4);
+      font-size: var(--text-sm);
+      color: #92400e;
+      line-height: 1.5;
+      margin-bottom: var(--sp-5);
+    }
+    .enc-error {
+      color: var(--clr-danger);
+      font-size: var(--text-sm);
+      margin-bottom: var(--sp-3);
+    }
+    .enc-dialog-actions {
+      display: flex;
+      gap: var(--sp-3);
+      justify-content: flex-end;
+      margin-top: var(--sp-5);
+    }
+    label.enc-toggle-label {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      color: var(--clr-text);
+      cursor: pointer;
+      margin-bottom: var(--sp-2);
+    }
+    label.enc-toggle-label input[type="checkbox"] {
+      width: 1.1em;
+      height: 1.1em;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    label.enc-toggle-label:has(input:disabled) {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
@@ -325,6 +409,7 @@
           <input type="file" id="import-file" accept="application/json" aria-hidden="true" hidden>
           <button type="button" id="btn-export-pdf" data-i18n="btn.exportPdf">Export&nbsp;PDF</button>
           <button type="button" id="btn-export-csv" data-i18n="btn.exportCsv">Export&nbsp;CSV</button>
+          <span id="enc-lock-indicator" class="enc-lock-badge" hidden aria-live="polite">&#128274;&nbsp;Encrypted</span>
         </div>
       </div>
     </nav>
@@ -456,6 +541,22 @@
           </div>
 
           <hr class="form-divider">
+          <span class="form-section-label">Draft security <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.8em">(optional)</span></span>
+
+          <div class="form-group">
+            <label class="enc-toggle-label">
+              <input type="checkbox" id="enc-enable-checkbox">
+              Encrypt saved draft
+            </label>
+            <p class="form-hint">
+              When enabled, the browser-saved draft is protected with AES-GCM (256-bit) encryption and
+              a password is required on every page load.
+              <strong>If you forget your password, the draft is permanently unrecoverable.</strong>
+              Exported JSON files are not encrypted by this feature.
+            </p>
+          </div>
+
+          <hr class="form-divider">
           <span class="form-section-label" data-i18n="start.sectionTemplate">Template</span>
 
           <div class="form-group">
@@ -540,6 +641,46 @@
     <div class="pdf-opts-actions">
       <button type="button" id="pdf-options-generate" class="btn-primary btn-sm" data-i18n="pdfopts.generate">Generate PDF</button>
       <button type="button" id="pdf-options-cancel" class="btn-secondary btn-sm" data-i18n="pdfopts.cancel">Cancel</button>
+    </div>
+  </dialog>
+
+  <!-- ── Unlock dialog (shown on load when draft is encrypted) ── -->
+  <dialog id="enc-unlock-dialog" aria-labelledby="enc-unlock-heading" aria-modal="true">
+    <h2 id="enc-unlock-heading">Draft is encrypted</h2>
+    <p class="enc-dialog-desc">Your saved draft is password-protected. Enter the password you chose when you enabled encryption to unlock it.</p>
+    <div class="form-group">
+      <label for="enc-unlock-password" style="display:block;font-size:var(--text-sm);font-weight:600;color:var(--clr-text);margin-bottom:var(--sp-2)">Password</label>
+      <input type="password" id="enc-unlock-password" autocomplete="current-password"
+             style="width:100%;padding:var(--sp-3) var(--sp-4);border:1px solid var(--clr-border);border-radius:var(--radius);font-size:var(--text-base);font-family:var(--font-sans);color:var(--clr-text);background:var(--clr-surface)">
+    </div>
+    <p id="enc-unlock-error" class="enc-error" hidden>Incorrect password. Please try again.</p>
+    <div class="enc-dialog-actions">
+      <button type="button" id="enc-unlock-submit" class="btn-primary btn-sm">Unlock</button>
+      <button type="button" id="enc-unlock-skip" class="btn-secondary btn-sm">Start without draft</button>
+    </div>
+  </dialog>
+
+  <!-- ── Enable-encryption dialog ─────────────────────────── -->
+  <dialog id="enc-enable-dialog" aria-labelledby="enc-enable-heading" aria-modal="true">
+    <h2 id="enc-enable-heading">Enable draft encryption</h2>
+    <p class="enc-dialog-desc">Your draft will be encrypted with AES-GCM (256-bit). Choose a strong password &#8212; it will be required every time you open this tool.</p>
+    <div class="enc-warning-box" role="note">
+      <strong>Important:</strong> If you forget your password, your draft is permanently unrecoverable &#8212; there is no reset or recovery option. Exported JSON files remain plaintext unless separately protected.
+    </div>
+    <div class="form-group">
+      <label for="enc-password-1" style="display:block;font-size:var(--text-sm);font-weight:600;color:var(--clr-text);margin-bottom:var(--sp-2)">Password</label>
+      <input type="password" id="enc-password-1" autocomplete="new-password"
+             style="width:100%;padding:var(--sp-3) var(--sp-4);border:1px solid var(--clr-border);border-radius:var(--radius);font-size:var(--text-base);font-family:var(--font-sans);color:var(--clr-text);background:var(--clr-surface)">
+    </div>
+    <div class="form-group">
+      <label for="enc-password-2" style="display:block;font-size:var(--text-sm);font-weight:600;color:var(--clr-text);margin-bottom:var(--sp-2)">Confirm password</label>
+      <input type="password" id="enc-password-2" autocomplete="new-password"
+             style="width:100%;padding:var(--sp-3) var(--sp-4);border:1px solid var(--clr-border);border-radius:var(--radius);font-size:var(--text-base);font-family:var(--font-sans);color:var(--clr-text);background:var(--clr-surface)">
+    </div>
+    <p id="enc-enable-error" class="enc-error" hidden></p>
+    <div class="enc-dialog-actions">
+      <button type="button" id="enc-enable-submit" class="btn-primary btn-sm">Enable encryption</button>
+      <button type="button" id="enc-enable-cancel" class="btn-secondary btn-sm">Cancel</button>
     </div>
   </dialog>
 
