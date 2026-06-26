@@ -67,7 +67,8 @@
 
     footerRepo:      { en: 'obs-assessment-tool', sq: 'obs-assessment-tool' },
     footerMit:       { en: 'Free & open source (MIT)', sq: 'Falas dhe me burim të hapur (MIT)' },
-    footerCopyright: { en: '©', sq: '©' }
+    footerCopyright: { en: '©', sq: '©' },
+    footerMadeBy:    { en: 'Made by', sq: 'Krijuar nga' }
   };
 
   /* ── Storage helpers ─────────────────────────────────────────── */
