@@ -268,6 +268,9 @@
       width: 90vw;
       background: var(--clr-surface);
       color: var(--clr-text);
+      /* Restore centering: the global '* { margin:0 }' reset overrides the UA
+         'margin:auto' that centres a modal <dialog>. */
+      margin: auto;
     }
     #pdf-options-dialog::backdrop {
       background: rgba(0, 0, 0, 0.45);
@@ -331,6 +334,8 @@
       width: 90vw;
       background: var(--clr-surface);
       color: var(--clr-text);
+      /* Restore centering overridden by the global '* { margin:0 }' reset. */
+      margin: auto;
     }
     #enc-unlock-dialog::backdrop,
     #enc-enable-dialog::backdrop {
