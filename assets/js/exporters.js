@@ -56,26 +56,85 @@
     var ink = [33, 37, 41], muted = [110, 116, 124];
 
     // --- Header band (brand colour) with logo + title ---
-    doc.setFillColor(brand[0], brand[1], brand[2]);
-    doc.rect(0, 0, PAGE_W, 96, 'F');
+    // Phase 1: determine logo dimensions and titleX without drawing yet.
     var titleX = M;
+    var chipPad = 6;
+    var hasLogo = false, lw = 0, lh = 0, logoFmt = '';
     if (meta.logo) {
       try {
-        var fmt = /^data:image\/png/i.test(meta.logo) ? 'PNG' : 'JPEG';
-        // logo on a white chip so it reads on the coloured band
-        doc.setFillColor(255, 255, 255); doc.roundedRect(M, 24, 116, 48, 4, 4, 'F');
-        doc.addImage(meta.logo, fmt, M + 6, 28, 104, 40, undefined, 'FAST');
-        titleX = M + 132;
+        logoFmt = /^data:image\/png/i.test(meta.logo) ? 'PNG' : 'JPEG';
+        var MAX_LW = 130, MAX_LH = 50;
+        lw = MAX_LW; lh = MAX_LH;
+        try {
+          if (typeof doc.getImageProperties === 'function') {
+            var imgProps = doc.getImageProperties(meta.logo);
+            var natRatio = imgProps.width / imgProps.height;
+            if (natRatio > MAX_LW / MAX_LH) { lw = MAX_LW; lh = MAX_LW / natRatio; }
+            else { lh = MAX_LH; lw = MAX_LH * natRatio; }
+          }
+        } catch (e2) { lw = 104; lh = 40; }
+        titleX = M + lw + chipPad * 2 + 16;
+        hasLogo = true;
       } catch (e) { /* malformed logo: ignore, never block the report */ }
     }
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(18);
-    doc.text(I.pick(template.title, lang), titleX, 46, { maxWidth: PAGE_W - titleX - M });
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-    doc.text((template.frameworks || []).join('  ·  '), titleX, 66, { maxWidth: PAGE_W - titleX - M });
-    doc.text('Information Security Assessment Report', titleX, 80);
 
-    var y = 124;
+    // Phase 2: measure header text with dynamic wrapping to compute band height.
+    var HPAD = 20;   // vertical padding inside the band (top and bottom)
+    var maxHdrW = PAGE_W - titleX - M;
+    var titleFs = 17, smallFs = 9;
+    var titleLH = titleFs * 1.2, smallLH = smallFs * 1.3;   // line-height steps
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(titleFs);
+    var hTitleLines = doc.splitTextToSize(I.pick(template.title, lang), maxHdrW);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(smallFs);
+    var hFwStr = (template.frameworks || []).join('  \xb7  ');
+    var hFwLines = hFwStr ? doc.splitTextToSize(hFwStr, maxHdrW) : [];
+    var hSubText = 'Information Security Assessment Report';
+
+    // Approximate total pixel height of the text block
+    var textBlockH = hTitleLines.length * titleLH
+      + (hFwLines.length ? 6 + hFwLines.length * smallLH : 0)
+      + 6 + smallLH;   // subtitle line
+
+    var logoChipH = hasLogo ? (lh + chipPad * 2) : 0;
+    var bandH = Math.max(logoChipH, textBlockH) + 2 * HPAD;
+
+    // Phase 3: draw background band.
+    doc.setFillColor(brand[0], brand[1], brand[2]);
+    doc.rect(0, 0, PAGE_W, bandH, 'F');
+
+    // Phase 4: draw logo chip (vertically centred).
+    if (hasLogo) {
+      try {
+        var chipTop = Math.round((bandH - logoChipH) / 2);
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(M, chipTop, lw + chipPad * 2, logoChipH, 4, 4, 'F');
+        doc.addImage(meta.logo, logoFmt, M + chipPad, chipTop + chipPad, lw, lh, undefined, 'FAST');
+      } catch (e) { /* ignore */ }
+    }
+
+    // Phase 5: draw header text with advancing y (no fixed positions, no overlaps).
+    doc.setTextColor(255, 255, 255);
+    var ty = Math.round((bandH - textBlockH) / 2);
+    if (ty < HPAD) ty = HPAD;
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(titleFs);
+    // y passed to text() is the baseline; add ~85 % of font size as ascent offset
+    doc.text(hTitleLines, titleX, ty + Math.round(titleFs * 0.85));
+    ty += hTitleLines.length * titleLH;
+
+    if (hFwLines.length) {
+      ty += 6;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(smallFs);
+      doc.text(hFwLines, titleX, ty + Math.round(smallFs * 0.85));
+      ty += hFwLines.length * smallLH;
+    }
+
+    ty += 6;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(smallFs);
+    doc.text(hSubText, titleX, ty + Math.round(smallFs * 0.85));
+
+    var y = bandH + 28;
     // --- Metadata block ---
     doc.setTextColor(ink[0], ink[1], ink[2]);
     function metaRow(label, value) {
@@ -146,6 +205,7 @@
         alternateRowStyles: { fillColor: [248, 249, 251] },
         columnStyles: { 0: { cellWidth: 22 }, 2: { cellWidth: 64 }, 3: { cellWidth: 40, halign: 'center' }, 4: { cellWidth: 110 }, 5: { cellWidth: 90 } }
       });
+      y = doc.lastAutoTable.finalY + 12;
     } else {
       // Fallback if the autotable plugin is unavailable: simple wrapped lines.
       doc.setFontSize(9); y += 14;
@@ -155,6 +215,92 @@
         y += 26;
       });
     }
+
+    // --- Detailed assessment (every domain, every question) ---
+    doc.addPage();
+    var yD = M;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(ink[0], ink[1], ink[2]);
+    doc.text('Detailed Assessment', M, yD); yD += 24;
+
+    (template.domains || []).forEach(function (domain) {
+      // Domain heading + score
+      if (yD > PAGE_H - 100) { doc.addPage(); yD = M; }
+      var ds = S.domainScore(domain, assessment);
+      var scoreStr = (ds && ds.score != null) ? Math.round(ds.score) + '%' : 'n/a';
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+      doc.setTextColor(brand[0], brand[1], brand[2]);
+      doc.text(I.pick(domain.title, lang) + '  —  ' + scoreStr, M, yD); yD += 16;
+
+      // Domain narrative
+      var narrative = assessment.domainNarratives && assessment.domainNarratives[domain.id];
+      if (narrative) {
+        doc.setFont('helvetica', 'italic'); doc.setFontSize(9);
+        doc.setTextColor(muted[0], muted[1], muted[2]);
+        var narLines = doc.splitTextToSize(String(narrative), PAGE_W - 2 * M);
+        if (yD + narLines.length * 12 > PAGE_H - 60) { doc.addPage(); yD = M; }
+        doc.text(narLines, M, yD); yD += narLines.length * 12 + 8;
+      }
+
+      // Gather template questions + any custom questions for this domain
+      var allQs = (domain.questions || []).slice();
+      var customQs = (assessment.customQuestions && assessment.customQuestions[domain.id]) || [];
+      allQs = allQs.concat(customQs);
+
+      // Build table rows
+      var qBody = allQs.map(function (q) {
+        var a = (assessment.answers || {})[q.id] || {};
+        var statusLbl = STATUS_LABEL[a.status] || a.status || 'Unanswered';
+        if (a.status === 'partial') {
+          statusLbl = 'Partial (' + (a.partialPercent == null ? 50 : a.partialPercent) + '%)';
+        }
+        var rem = a.remediation || {};
+        var remTxt = [rem.owner, rem.targetDate, rem.status].filter(Boolean).join(' / ');
+        return [
+          String(q.id || ''),
+          I.pick(q.text, lang),
+          statusLbl,
+          a.naReason || '',
+          a.evidence || '',
+          remTxt
+        ];
+      });
+
+      var qHead = [['ID', 'Question', 'Status', 'N/A Reason', 'Evidence', 'Remediation']];
+
+      if (typeof doc.autoTable === 'function') {
+        doc.autoTable({
+          startY: yD,
+          head: qHead,
+          body: qBody,
+          margin: { left: M, right: M },
+          styles: { fontSize: 7.5, cellPadding: 4, valign: 'top', overflow: 'linebreak', textColor: ink },
+          headStyles: { fillColor: brand, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8 },
+          alternateRowStyles: { fillColor: [248, 249, 251] },
+          columnStyles: {
+            0: { cellWidth: 42 },
+            2: { cellWidth: 68 },
+            3: { cellWidth: 72 },
+            4: { cellWidth: 80 },
+            5: { cellWidth: 80 }
+          }
+        });
+        yD = doc.lastAutoTable.finalY + 18;
+      } else {
+        // Fallback: simple wrapped text per question
+        doc.setFontSize(8.5); doc.setFont('helvetica', 'normal');
+        doc.setTextColor(ink[0], ink[1], ink[2]);
+        qBody.forEach(function (row) {
+          if (yD > PAGE_H - 60) { doc.addPage(); yD = M; }
+          var txt = '[' + row[0] + '] ' + row[1] + '  |  ' + row[2];
+          if (row[3]) txt += '  |  N/A: ' + row[3];
+          if (row[4]) txt += '  |  Evidence: ' + row[4];
+          if (row[5]) txt += '  |  Remediation: ' + row[5];
+          var fLines = doc.splitTextToSize(txt, PAGE_W - 2 * M);
+          doc.text(fLines, M, yD); yD += fLines.length * 12 + 8;
+        });
+        yD += 10;
+      }
+    });
 
     // --- Footer + page numbers on every page ---
     var pages = doc.internal.getNumberOfPages();
