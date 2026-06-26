@@ -26,3 +26,28 @@ test('reconcile preserves known, orphans unknown', function () {
   assert.ok(r.orphaned.QX);
   assert.ok(r.notices.length >= 1);
 });
+test('available() true and saveDraft/loadDraft round-trip when localStorage exists', function () {
+  var store = {};
+  global.localStorage = {
+    setItem: function (k, v) { store[k] = String(v); },
+    getItem: function (k) { return k in store ? store[k] : null; },
+    removeItem: function (k) { delete store[k]; }
+  };
+  try {
+    assert.strictEqual(storage.available(), true);
+    var a = { schemaVersion: 1, templateId: 't', templateVersion: '1', meta: {}, answers: { Q1: { status: 'compliant' } }, customQuestions: {} };
+    assert.strictEqual(storage.saveDraft(a), true);
+    var loaded = storage.loadDraft();
+    assert.strictEqual(loaded.ok, true);
+    assert.deepStrictEqual(loaded.assessment.answers, a.answers);
+  } finally { delete global.localStorage; }
+});
+test('parseAssessment rejects answers: null', function () {
+  const r = storage.parseAssessment('{"templateId":"t","answers":null}');
+  assert.strictEqual(r.ok, false);
+});
+test('reconcile notices missing templateVersion against versioned template', function () {
+  const a = { schemaVersion: 1, templateId: 't', meta: {}, answers: { Q1: { status: 'compliant' } }, customQuestions: {} };
+  const r = storage.reconcile(a, template);
+  assert.ok(r.notices.length >= 1);
+});
