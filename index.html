@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Free, open-source security assessment tool for ISO 27001/27002, NIS2, and CIS Controls v8. No account required — all data stays in your browser.">
+  <meta name="theme-color" content="#0f2545">
+  <title>OBS Security Assessment Tool</title>
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <!-- ── Site header / nav ─────────────────────────────── -->
+  <header class="site-header">
+    <nav class="site-nav container" aria-label="Site navigation">
+      <a class="nav-brand" href="index.html">OBS Assessment Tool</a>
+      <div class="lang-toggle" role="group" aria-label="Language / Gjuha">
+        <button type="button" data-lang="en" aria-pressed="true" data-i18n="langEn">EN</button>
+        <button type="button" data-lang="sq" aria-pressed="false" data-i18n="langSq">SQ</button>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main-content">
+
+    <!-- ── Hero ──────────────────────────────────────────── -->
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="container">
+        <p class="hero__eyebrow" aria-hidden="true">
+          <span>&#x1F512;</span>
+          <span data-i18n="heroEyebrow">Security Assessment</span>
+        </p>
+        <h1 id="hero-heading" data-i18n="heroTitle">OBS Security Assessment Tool</h1>
+        <p class="hero__desc" data-i18n="heroDesc">
+          Free, open-source assessments for ISO&nbsp;27001/27002, NIS2, and CIS Controls&nbsp;v8.
+          All data stays in your browser &mdash; no account, no tracking.
+        </p>
+        <div class="hero__cta">
+          <a class="btn-primary" href="app.html" data-i18n="heroCta">Start assessment</a>
+          <a class="btn-ghost" href="#what-it-does" data-i18n="heroLearnMore">Learn more</a>
+        </div>
+        <div class="hero__badges" aria-label="Supported frameworks">
+          <span class="badge">ISO 27001</span>
+          <span class="badge">ISO 27002</span>
+          <span class="badge">NIS2</span>
+          <span class="badge">CIS Controls v8</span>
+          <span class="badge">MIT</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── What it does ──────────────────────────────────── -->
+    <section id="what-it-does" class="section" aria-labelledby="what-heading">
+      <div class="container">
+        <div class="section__header">
+          <span class="section__label" data-i18n="whatLabel">Capabilities</span>
+          <h2 id="what-heading" data-i18n="whatTitle">What it does</h2>
+          <p class="section__desc" data-i18n="whatDesc">
+            A guided questionnaire that maps your security controls against internationally recognised
+            frameworks. Work through each domain, record your implementation status, and get an
+            instant gap analysis &mdash; all without signing up or sending data anywhere.
+          </p>
+        </div>
+
+        <div class="card-grid">
+          <div class="feature-card">
+            <div class="feature-card__icon" aria-hidden="true">&#x1F4CB;</div>
+            <h3 data-i18n="whatCard1Title">ISO 27001 / 27002</h3>
+            <p data-i18n="whatCard1Desc">
+              Assess your ISMS controls against Annex&nbsp;A and the full ISO&nbsp;27002
+              implementation guidance.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-card__icon" aria-hidden="true">&#x1F1EA;&#x1F1FA;</div>
+            <h3 data-i18n="whatCard2Title">NIS2 Directive</h3>
+            <p data-i18n="whatCard2Desc">
+              Evaluate compliance with the EU NIS2 Directive requirements for network
+              and information security.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-card__icon" aria-hidden="true">&#x1F6E1;&#xFE0F;</div>
+            <h3 data-i18n="whatCard3Title">CIS Controls v8</h3>
+            <p data-i18n="whatCard3Desc">
+              Measure your maturity against the CIS Critical Security Controls, organised
+              into Implementation Groups.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── How it works ──────────────────────────────────── -->
+    <section id="how-it-works" class="section section--alt" aria-labelledby="how-heading">
+      <div class="container">
+        <div class="section__header centered">
+          <span class="section__label" data-i18n="howLabel">Process</span>
+          <h2 id="how-heading" data-i18n="howTitle">How it works</h2>
+          <p class="section__desc" data-i18n="howSubDesc">
+            Three steps from start to actionable results.
+          </p>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <span class="step__number" aria-hidden="true">01</span>
+            <h3 data-i18n="howStep1Title">Choose a template</h3>
+            <p data-i18n="howStep1Desc">
+              Select a built-in framework template or import a custom JSON template
+              to match your scope and objectives.
+            </p>
+          </div>
+
+          <div class="step">
+            <span class="step__number" aria-hidden="true">02</span>
+            <h3 data-i18n="howStep2Title">Complete the assessment</h3>
+            <p data-i18n="howStep2Desc">
+              Answer each question at your own pace. Progress is saved automatically
+              so you can resume at any time.
+            </p>
+          </div>
+
+          <div class="step">
+            <span class="step__number" aria-hidden="true">03</span>
+            <h3 data-i18n="howStep3Title">Review your results</h3>
+            <p data-i18n="howStep3Desc">
+              See per-domain scores, identify gaps, and export a summary report
+              for stakeholders or auditors.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Open source ───────────────────────────────────── -->
+    <section id="open-source" class="section" aria-labelledby="oss-heading">
+      <div class="container">
+        <div class="oss-panel">
+          <span class="section__label" data-i18n="ossLabel">Open source</span>
+          <h2 id="oss-heading" data-i18n="ossTitle">Free &amp; open source</h2>
+          <p class="section__desc" data-i18n="ossDesc">
+            Licensed under MIT. No sign-up, no telemetry, no data ever leaves your device.
+            Inspect the source, run it locally, fork it, or contribute &mdash;
+            it belongs to the community.
+          </p>
+          <a class="btn-primary"
+             href="https://github.com/ObsidianCorps/obs-assessment-tool"
+             target="_blank"
+             rel="noopener noreferrer"
+             data-i18n="ossGitHub">View on GitHub</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Footer ────────────────────────────────────────── -->
+  <footer id="site-footer" aria-label="Site footer">
+    <div class="container">
+      <div class="footer-inner">
+        <p class="footer-copy">
+          <a href="https://github.com/ObsidianCorps/obs-assessment-tool"
+             target="_blank"
+             rel="noopener noreferrer"
+             data-i18n="footerRepo">obs-assessment-tool</a>
+          &mdash;
+          <span data-i18n="footerMit">Free &amp; open source (MIT)</span>
+        </p>
+        <p class="footer-meta">
+          <span data-i18n="footerCopyright">&copy;</span>
+          <span id="footer-year"></span>
+          ObsidianCorps
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/landing.js"></script>
+</body>
+</html>
