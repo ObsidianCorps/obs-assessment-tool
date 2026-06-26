@@ -877,6 +877,36 @@ a:hover { color: var(--clr-accent-hover); }
   text-align: right;
 }
 
+/* ── Dashboard — domain drill-down ──────────────────────────────── */
+.obs-domain-details {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.obs-domain-summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  outline: none;
+}
+.obs-domain-summary::-webkit-details-marker { display: none; }
+.obs-domain-summary::marker { display: none; }
+
+.obs-domain-summary:hover {
+  background: var(--clr-bg);
+}
+
+.obs-domain-details[open] > .obs-domain-summary {
+  background: var(--clr-bg);
+}
+
 /* ── Utility classes ─────────────────────────────────────── */
 .visually-hidden {
   position: absolute;

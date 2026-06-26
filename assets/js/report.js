@@ -3,13 +3,13 @@
 
   root.OBS = root.OBS || {};
 
-  /* ── Chart instance refs (module-scope for cleanup + chartImages) ── */
-  var _radarChart   = null;
+  /* ── Chart instance refs — module-scope ONLY for destroy + chartImages ── */
+  var _radarChart    = null;
   var _doughnutChart = null;
   var _radarCanvas   = null;
   var _doughnutCanvas = null;
 
-  /* ── i18n helper (delegates to OBS.i18n if present) ──────────────── */
+  /* ── i18n helper (delegates to OBS.i18n if present) ─────────────────── */
   function pick(field, lang) {
     if (root.OBS.i18n && typeof root.OBS.i18n.pick === 'function') {
       return root.OBS.i18n.pick(field, lang);
@@ -20,7 +20,7 @@
     return field.en || '';
   }
 
-  /* ── Small DOM helpers ────────────────────────────────────────────── */
+  /* ── DOM helper — inline styles, textContent only (XSS-safe) ─────────── */
   function el(tag, styles, text) {
     var node = document.createElement(tag);
     if (styles) node.style.cssText = styles;
@@ -29,179 +29,291 @@
   }
 
   function sectionHeading(text) {
-    var h = document.createElement('h3');
-    h.style.cssText = 'font-size:1rem;font-weight:700;color:var(--clr-navy);margin-bottom:1rem;';
+    var h = el('h3',
+      'font-size:1rem;font-weight:700;color:var(--clr-navy);margin-bottom:1rem;');
     h.textContent = text;
     return h;
   }
 
   function labelDiv(text) {
-    var d = document.createElement('div');
-    d.style.cssText = 'font-size:0.75rem;font-weight:700;text-transform:uppercase;' +
-      'letter-spacing:0.08em;color:var(--clr-text-muted);margin-bottom:0.5rem;';
-    d.textContent = text;
-    return d;
+    return el('div',
+      'font-size:0.75rem;font-weight:700;text-transform:uppercase;' +
+      'letter-spacing:0.08em;color:var(--clr-text-muted);margin-bottom:0.5rem;',
+      text);
   }
 
-  /* ── Destroy previous charts ──────────────────────────────────────── */
+  /* ── Score band helpers ──────────────────────────────────────────────── */
+  function bandColor(score) {
+    if (score == null) return 'var(--clr-text-muted)';
+    if (score < 40)   return 'var(--clr-danger)';
+    if (score < 70)   return 'var(--clr-warning)';
+    return 'var(--clr-compliant)';
+  }
+  function bandBg(score) {
+    if (score == null) return 'var(--clr-bg)';
+    if (score < 40)   return 'var(--clr-danger-bg)';
+    if (score < 70)   return 'var(--clr-warning-bg)';
+    return 'var(--clr-compliant-bg)';
+  }
+  function bandLabel(score) {
+    if (score == null) return 'No data';
+    if (score < 40)   return 'High Risk';
+    if (score < 70)   return 'Moderate';
+    return 'Good';
+  }
+
+  /* ── Destroy previous chart instances ───────────────────────────────── */
   function destroyCharts() {
-    if (_radarChart) {
-      try { _radarChart.destroy(); } catch (e) { /* ignore */ }
-      _radarChart = null;
-    }
-    if (_doughnutChart) {
-      try { _doughnutChart.destroy(); } catch (e) { /* ignore */ }
-      _doughnutChart = null;
-    }
+    if (_radarChart)    { try { _radarChart.destroy();    } catch (e) {} _radarChart    = null; }
+    if (_doughnutChart) { try { _doughnutChart.destroy(); } catch (e) {} _doughnutChart = null; }
     _radarCanvas    = null;
     _doughnutCanvas = null;
   }
 
-  /* ── Section 1: Completeness banner ──────────────────────────────── */
-  function buildCompletenessBanner(comp) {
-    var card = document.createElement('div');
-    card.className = 'stat-card';
-    card.style.cssText = 'margin-bottom:1.5rem;';
-
-    var valueDiv = document.createElement('div');
-    valueDiv.className = 'stat-card__value';
-    valueDiv.style.fontSize = '1.375rem';
-    valueDiv.textContent = comp.answered + ' of ' + comp.total + ' answered';
-    card.appendChild(valueDiv);
-
-    var pct = Math.round(comp.percent);
-    var note = pct < 100 ? ' — partial results below; scores may shift as more questions are answered.' : ' — assessment complete.';
-    var sub = document.createElement('div');
-    sub.className = 'stat-card__label';
-    sub.textContent = pct + '% complete' + note;
-    card.appendChild(sub);
-
-    return card;
-  }
-
-  /* ── Section 2a: Maturity badge ──────────────────────────────────── */
-  function buildMaturityCard(overall, mat, lang) {
-    var card = document.createElement('div');
-    card.className = 'stat-card';
-
-    card.appendChild(labelDiv('Maturity Level'));
-
-    if (mat) {
-      var badge = el('div',
-        'display:inline-flex;align-items:center;gap:0.5rem;' +
-        'background:var(--clr-sky-tint);color:var(--clr-navy);' +
-        'border-radius:999px;padding:0.25rem 0.875rem;margin-bottom:0.5rem;');
-      badge.appendChild(el('span',
-        'font-size:1.5rem;font-weight:800;line-height:1;', 'L' + mat.level));
-      badge.appendChild(el('span',
-        'font-size:0.875rem;font-weight:600;', pick(mat.label, lang)));
-      card.appendChild(badge);
-
-      var scoreNote = document.createElement('div');
-      scoreNote.className = 'stat-card__label';
-      scoreNote.textContent = 'Overall score: ' + Math.round(overall) + '%';
-      card.appendChild(scoreNote);
-    } else {
-      var noVal = document.createElement('div');
-      noVal.className = 'stat-card__value';
-      noVal.textContent = '—';
-      card.appendChild(noVal);
-
-      var noLbl = document.createElement('div');
-      noLbl.className = 'stat-card__label';
-      noLbl.textContent = overall != null
-        ? 'Score: ' + Math.round(overall) + '% (no maturity band matched)'
-        : 'No scored answers yet';
-      card.appendChild(noLbl);
+  /* ── Threat-weighted risk score (0–100; lower = better) ─────────────── */
+  /* sum((1 - value) × weight) over answered non-NA questions, normalised  */
+  function computeRiskScore(template, assessment, scoring) {
+    var num = 0, den = 0;
+    var domains = template.domains || [];
+    for (var di = 0; di < domains.length; di++) {
+      var domain    = domains[di];
+      var questions = domain.questions || [];
+      for (var qi = 0; qi < questions.length; qi++) {
+        var q = questions[qi];
+        var v = scoring.answerValue((assessment.answers || {})[q.id]);
+        if (v !== null) {
+          var w = scoring.weight(q);
+          num += (1 - v) * w;
+          den += w;
+        }
+      }
+      /* Custom questions */
+      var customs = (assessment.customQuestions || {})[domain.id] || [];
+      for (var ci = 0; ci < customs.length; ci++) {
+        var cq = customs[ci];
+        if (cq && (cq.text || cq.status)) {
+          var cv = scoring.answerValue(cq);
+          if (cv !== null) {
+            var cw = scoring.weight({ weight: 1, threatIndicator: 3 });
+            num += (1 - cv) * cw;
+            den += cw;
+          }
+        }
+      }
     }
+    return den > 0 ? Math.round((num / den) * 100) : null;
+  }
+
+  /* ── Framework coverage — count questions referencing each standard ───── */
+  function computeCoverage(template) {
+    var counts = { iso27001: 0, nis2: 0, cis: 0 };
+    var domains = template.domains || [];
+    for (var di = 0; di < domains.length; di++) {
+      var questions = domains[di].questions || [];
+      for (var qi = 0; qi < questions.length; qi++) {
+        var refs = questions[qi].references;
+        if (!refs) continue;
+        if (refs.iso27001) counts.iso27001++;
+        if (refs.nis2)     counts.nis2++;
+        if (refs.cis)      counts.cis++;
+      }
+    }
+    return counts;
+  }
+
+  /* ── 1. HERO SUMMARY CARD ────────────────────────────────────────────── */
+  function buildHeroCard(overall, mat, comp, lang) {
+    var score = overall != null ? Math.round(overall) : null;
+    var card = el('div',
+      'background:var(--clr-surface);border:1px solid var(--clr-border);' +
+      'border-radius:var(--radius-lg);padding:var(--sp-6) var(--sp-8);' +
+      'box-shadow:var(--shadow-sm);margin-bottom:1.5rem;' +
+      'display:grid;grid-template-columns:auto 1fr auto;' +
+      'gap:2rem;align-items:center;');
+    card.style.borderLeft = '6px solid ' + bandColor(score);
+
+    /* Left — score circle */
+    var scoreBlock = el('div', 'text-align:center;min-width:100px;');
+    var circle = el('div',
+      'width:96px;height:96px;border-radius:50%;' +
+      'display:inline-flex;align-items:center;justify-content:center;' +
+      'flex-direction:column;' +
+      'background:' + bandBg(score) + ';' +
+      'border:3px solid ' + bandColor(score) + ';');
+    var scoreNum = el('span',
+      'font-size:1.75rem;font-weight:800;line-height:1;color:' + bandColor(score) + ';');
+    scoreNum.textContent = score != null ? score + '%' : '—';
+    circle.appendChild(scoreNum);
+    var scoreSub = el('span',
+      'font-size:0.625rem;font-weight:700;text-transform:uppercase;' +
+      'letter-spacing:0.05em;color:' + bandColor(score) + ';margin-top:2px;');
+    scoreSub.textContent = bandLabel(score);
+    circle.appendChild(scoreSub);
+    scoreBlock.appendChild(circle);
+    card.appendChild(scoreBlock);
+
+    /* Middle — maturity + progress */
+    var mid = el('div', '');
+    var titleRow = el('div', 'display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;');
+    var mainTitle = el('span', 'font-size:1rem;font-weight:700;color:var(--clr-navy);');
+    mainTitle.textContent = 'Security Assessment Overview';
+    titleRow.appendChild(mainTitle);
+    if (mat) {
+      var matBadge = el('span',
+        'display:inline-flex;align-items:center;gap:0.25rem;' +
+        'background:var(--clr-sky-tint);color:var(--clr-navy);' +
+        'border-radius:999px;padding:0.125rem 0.625rem;' +
+        'font-size:0.75rem;font-weight:700;');
+      matBadge.textContent = 'L' + mat.level + ' · ' + pick(mat.label, lang);
+      titleRow.appendChild(matBadge);
+    }
+    mid.appendChild(titleRow);
+
+    var compPct = Math.round(comp.percent);
+    var compLabel = el('div',
+      'font-size:0.75rem;color:var(--clr-text-muted);margin-bottom:0.375rem;');
+    compLabel.textContent = 'Completeness: ' + comp.answered + ' / ' + comp.total +
+      ' questions answered (' + compPct + '%)';
+    mid.appendChild(compLabel);
+
+    var track = el('div',
+      'height:6px;background:var(--clr-border);border-radius:999px;overflow:hidden;max-width:360px;');
+    var fill = el('div',
+      'height:100%;border-radius:999px;background:var(--clr-accent);' +
+      'width:' + compPct + '%;');
+    track.appendChild(fill);
+    mid.appendChild(track);
+
+    if (compPct < 100) {
+      mid.appendChild(el('div',
+        'font-size:0.7rem;color:var(--clr-text-muted);margin-top:0.25rem;',
+        'Scores may change as more questions are completed.'));
+    }
+    card.appendChild(mid);
+
+    /* Right — risk band pill */
+    var pill = el('div',
+      'text-align:center;padding:0.625rem 1rem;border-radius:var(--radius);' +
+      'background:' + bandBg(score) + ';' +
+      'border:1px solid ' + bandColor(score) + ';min-width:100px;');
+    pill.appendChild(el('div',
+      'font-size:0.625rem;font-weight:700;text-transform:uppercase;' +
+      'letter-spacing:0.07em;color:var(--clr-text-muted);margin-bottom:0.125rem;',
+      'Risk Band'));
+    pill.appendChild(el('div',
+      'font-size:1rem;font-weight:800;color:' + bandColor(score) + ';',
+      bandLabel(score)));
+    card.appendChild(pill);
 
     return card;
   }
 
-  /* ── Section 2b: Compliance summary + critical gaps ──────────────── */
-  function buildSummaryCard(summary, lang) {
-    var card = document.createElement('div');
-    card.className = 'stat-card';
+  /* ── 2. METRICS ROW (risk · coverage · status) ───────────────────────── */
+  function buildMetricsRow(template, assessment, scoring, compSummary) {
+    var row = el('div',
+      'display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;');
 
-    card.appendChild(labelDiv('Compliance Summary'));
+    /* Card A — Threat-weighted risk score */
+    var riskScore = computeRiskScore(template, assessment, scoring);
+    /* Risk is inverse: high risk score = high exposure; colour accordingly */
+    var riskColor = bandColor(riskScore != null ? (100 - riskScore) : null);
+    var riskCard = el('div',
+      'background:var(--clr-surface);border:1px solid var(--clr-border);' +
+      'border-radius:var(--radius-lg);padding:var(--sp-5) var(--sp-6);box-shadow:var(--shadow-xs);');
+    riskCard.appendChild(labelDiv('Threat-Weighted Risk'));
+    riskCard.appendChild(el('div',
+      'font-size:2rem;font-weight:800;line-height:1;color:' + riskColor + ';',
+      riskScore != null ? riskScore + '%' : '—'));
+    riskCard.appendChild(el('div',
+      'font-size:0.75rem;color:var(--clr-text-muted);margin-top:0.25rem;',
+      'weighted exposure — lower is better'));
+    row.appendChild(riskCard);
 
-    var STATUS_ROWS = [
-      { key: 'compliant',    label: 'Compliant',     color: 'var(--clr-compliant)' },
-      { key: 'partial',      label: 'Partial',        color: 'var(--clr-partial)' },
-      { key: 'nonCompliant', label: 'Non-compliant',  color: 'var(--clr-danger)' },
-      { key: 'na',           label: 'N/A',            color: 'var(--clr-na)' },
-      { key: 'unanswered',   label: 'Unanswered',     color: 'var(--clr-text-muted)' }
+    /* Card B — Framework coverage */
+    var coverage = computeCoverage(template);
+    var fwCard = el('div',
+      'background:var(--clr-surface);border:1px solid var(--clr-border);' +
+      'border-radius:var(--radius-lg);padding:var(--sp-5) var(--sp-6);box-shadow:var(--shadow-xs);');
+    fwCard.appendChild(labelDiv('Framework Coverage'));
+    var FRAMEWORKS = [
+      { key: 'iso27001', label: 'ISO 27001', color: 'var(--clr-accent)'    },
+      { key: 'nis2',     label: 'NIS2',      color: 'var(--clr-partial)'   },
+      { key: 'cis',      label: 'CIS',       color: 'var(--clr-compliant)' }
     ];
+    for (var fi = 0; fi < FRAMEWORKS.length; fi++) {
+      var fw = FRAMEWORKS[fi];
+      var fwRow = el('div',
+        'display:flex;align-items:center;justify-content:space-between;' +
+        'padding:0.25rem 0;' +
+        (fi < FRAMEWORKS.length - 1 ? 'border-bottom:1px solid var(--clr-border);' : ''));
+      fwRow.appendChild(el('span', 'font-size:0.8125rem;color:var(--clr-text);', fw.label));
+      fwRow.appendChild(el('span',
+        'font-size:0.8125rem;font-weight:700;font-variant-numeric:tabular-nums;' +
+        'background:var(--clr-bg);border-radius:var(--radius-sm);' +
+        'padding:0 0.375rem;color:' + fw.color + ';',
+        String(coverage[fw.key])));
+      fwCard.appendChild(fwRow);
+    }
+    row.appendChild(fwCard);
 
-    var chips = el('div', 'display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;');
-    for (var i = 0; i < STATUS_ROWS.length; i++) {
-      var row = STATUS_ROWS[i];
-      var chip = el('span',
-        'display:inline-flex;align-items:center;gap:0.25rem;' +
-        'background:var(--clr-bg);border:1px solid var(--clr-border);' +
-        'border-radius:999px;padding:0.125rem 0.5rem;font-size:0.75rem;font-weight:600;');
+    /* Card C — Status breakdown */
+    var sumCard = el('div',
+      'background:var(--clr-surface);border:1px solid var(--clr-border);' +
+      'border-radius:var(--radius-lg);padding:var(--sp-5) var(--sp-6);box-shadow:var(--shadow-xs);');
+    sumCard.appendChild(labelDiv('Status Breakdown'));
+    var STATUS_ROWS = [
+      { key: 'compliant',    label: 'Compliant',     color: 'var(--clr-compliant)'   },
+      { key: 'partial',      label: 'Partial',        color: 'var(--clr-partial)'     },
+      { key: 'nonCompliant', label: 'Non-compliant',  color: 'var(--clr-danger)'      },
+      { key: 'na',           label: 'N/A',            color: 'var(--clr-na)'          },
+      { key: 'unanswered',   label: 'Unanswered',     color: 'var(--clr-text-muted)'  }
+    ];
+    for (var si = 0; si < STATUS_ROWS.length; si++) {
+      var sr = STATUS_ROWS[si];
+      var sRow = el('div',
+        'display:flex;align-items:center;gap:0.375rem;padding:0.2rem 0;font-size:0.8125rem;');
       var dot = el('span',
         'width:8px;height:8px;border-radius:50%;flex-shrink:0;' +
-        'background:' + row.color + ';display:inline-block;');
-      chip.appendChild(dot);
-      chip.appendChild(document.createTextNode(summary[row.key] + ' ' + row.label));
-      chips.appendChild(chip);
+        'display:inline-block;background:' + sr.color + ';');
+      var sLabel = el('span', 'flex:1;color:var(--clr-text);', sr.label);
+      var sCount = el('span',
+        'font-weight:700;font-variant-numeric:tabular-nums;color:var(--clr-text);',
+        String(compSummary[sr.key]));
+      sRow.appendChild(dot);
+      sRow.appendChild(sLabel);
+      sRow.appendChild(sCount);
+      sumCard.appendChild(sRow);
     }
-    card.appendChild(chips);
+    row.appendChild(sumCard);
 
-    /* Critical gaps list */
-    var gaps = summary.criticalGaps || [];
-    if (gaps.length) {
-      var gapHdr = el('div',
-        'font-size:0.75rem;font-weight:700;color:var(--clr-danger);' +
-        'text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.25rem;',
-        'Critical gaps (' + gaps.length + ')');
-      card.appendChild(gapHdr);
-
-      var ul = document.createElement('ul');
-      ul.style.cssText = 'font-size:0.8rem;padding-left:1.25rem;color:var(--clr-text);margin:0;';
-      for (var gi = 0; gi < gaps.length; gi++) {
-        var gap = gaps[gi];
-        var li = document.createElement('li');
-        li.textContent = gap.qid + ': ' + pick(gap.text, lang);
-        ul.appendChild(li);
-      }
-      card.appendChild(ul);
-    } else {
-      var noGaps = el('div',
-        'font-size:0.8rem;color:var(--clr-compliant);font-weight:600;',
-        'No critical gaps identified.');
-      card.appendChild(noGaps);
-    }
-
-    return card;
+    return row;
   }
 
-  /* ── Section 3: Charts ────────────────────────────────────────────── */
-  function buildChartSection(template, assessment, scoring, lang) {
+  /* ── 3. CHARTS (radar + doughnut) ────────────────────────────────────── */
+  function buildChartSection(template, assessment, scoring, compSummary, lang) {
     var section = el('div', 'margin-bottom:1.5rem;');
     section.appendChild(sectionHeading('Score Visualisation'));
 
     var grid = el('div',
       'display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;');
 
-    /* Radar card */
-    var radarCard = document.createElement('div');
-    radarCard.className = 'stat-card';
-    radarCard.style.textAlign = 'center';
+    var radarCard = el('div',
+      'background:var(--clr-surface);border:1px solid var(--clr-border);' +
+      'border-radius:var(--radius-lg);padding:var(--sp-5) var(--sp-6);' +
+      'box-shadow:var(--shadow-xs);text-align:center;');
     radarCard.appendChild(labelDiv('Domain Scores'));
 
-    /* Doughnut card */
-    var doughnutCard = document.createElement('div');
-    doughnutCard.className = 'stat-card';
-    doughnutCard.style.textAlign = 'center';
+    var doughnutCard = el('div',
+      'background:var(--clr-surface);border:1px solid var(--clr-border);' +
+      'border-radius:var(--radius-lg);padding:var(--sp-5) var(--sp-6);' +
+      'box-shadow:var(--shadow-xs);text-align:center;');
     doughnutCard.appendChild(labelDiv('Status Breakdown'));
 
-    /* --- Compute domain scores for radar --- */
+    /* Compute domain scores for radar */
     var domainLabels = [];
     var domainData   = [];
-    var hasNull = false;
-    var domains = template.domains || [];
+    var hasNull      = false;
+    var domains      = template.domains || [];
     for (var di = 0; di < domains.length; di++) {
       var dom = domains[di];
       var ds  = scoring.domainScore(dom, assessment);
@@ -211,14 +323,13 @@
     }
 
     if (hasNull) {
-      radarCard.appendChild(
-        el('div',
-          'font-size:0.7rem;color:var(--clr-text-muted);margin-bottom:0.25rem;',
-          'Domains with no scored answers shown as 0'));
+      radarCard.appendChild(el('div',
+        'font-size:0.7rem;color:var(--clr-text-muted);margin-bottom:0.25rem;',
+        'Domains with no scored answers shown as 0'));
     }
 
     if (typeof root.Chart !== 'undefined') {
-      /* ---- Canvas-based charts ---- */
+      /* Canvas-based charts (Chart.js UMD auto-registers; no Chart.register() needed) */
       var radarCanvas = document.createElement('canvas');
       radarCanvas.id     = 'obs-radar-canvas';
       radarCanvas.width  = 360;
@@ -237,8 +348,6 @@
       grid.appendChild(doughnutCard);
       section.appendChild(grid);
 
-      /* Draw after DOM is assembled (canvases must be in document for context) */
-      /* Chart.js UMD bundle auto-registers all controllers; no Chart.register() needed */
       _radarChart = new root.Chart(radarCanvas.getContext('2d'), {
         type: 'radar',
         data: {
@@ -266,24 +375,21 @@
               pointLabels: { font: { size: 9 } }
             }
           },
-          plugins: {
-            legend: { display: false }
-          }
+          plugins: { legend: { display: false } }
         }
       });
 
-      var summary = scoring.complianceSummary(template, assessment);
       _doughnutChart = new root.Chart(doughnutCanvas.getContext('2d'), {
         type: 'doughnut',
         data: {
           labels: ['Compliant', 'Partial', 'Non-compliant', 'N/A', 'Unanswered'],
           datasets: [{
             data: [
-              summary.compliant,
-              summary.partial,
-              summary.nonCompliant,
-              summary.na,
-              summary.unanswered
+              compSummary.compliant,
+              compSummary.partial,
+              compSummary.nonCompliant,
+              compSummary.na,
+              compSummary.unanswered
             ],
             backgroundColor: ['#16a34a', '#7c3aed', '#dc2626', '#64748b', '#cbd5e1'],
             borderWidth: 0
@@ -303,59 +409,56 @@
       });
 
     } else {
-      /* ---- Textual fallback: domain score bars ---- */
-      radarCard.appendChild(
-        el('div',
-          'font-size:0.7rem;color:var(--clr-warning);margin-bottom:0.5rem;',
-          'Chart.js not available — showing scores as text.'));
+      /* Textual fallback when Chart.js is absent */
+      radarCard.appendChild(el('div',
+        'font-size:0.7rem;color:var(--clr-warning);margin-bottom:0.5rem;',
+        'Chart.js not available — showing scores as text.'));
 
       for (var fdi = 0; fdi < domains.length; fdi++) {
         var fdom = domains[fdi];
         var fds  = scoring.domainScore(fdom, assessment);
         var pct  = fds.score !== null ? Math.round(fds.score) : null;
 
-        var bar = document.createElement('div');
-        bar.className = 'domain-score-bar';
-
-        var nameWrap = document.createElement('div');
-        nameWrap.appendChild(
-          el('div', null, pick(fdom.title, lang)));
-        var track = el('div', null);
-        track.className = 'domain-score-bar__track';
-        var fill = el('div', null);
-        fill.className = 'domain-score-bar__fill';
-        fill.style.width = (pct !== null ? pct : 0) + '%';
-        track.appendChild(fill);
-        nameWrap.appendChild(track);
-
-        var pctSpan = el('span', null, pct !== null ? pct + '%' : 'N/A');
-        pctSpan.className = 'domain-score-bar__pct';
-
+        var bar  = el('div',
+          'display:grid;grid-template-columns:1fr auto;align-items:center;' +
+          'gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--clr-border);');
+        var nameWrap = el('div', '');
+        nameWrap.appendChild(el('div',
+          'font-size:0.875rem;font-weight:600;color:var(--clr-text);',
+          pick(fdom.title, lang)));
+        var barTrack = el('div',
+          'height:8px;background:var(--clr-border);border-radius:999px;overflow:hidden;margin-top:0.25rem;');
+        var barFill = el('div',
+          'height:100%;border-radius:999px;background:' + bandColor(pct) + ';' +
+          'width:' + (pct !== null ? pct : 0) + '%;');
+        barTrack.appendChild(barFill);
+        nameWrap.appendChild(barTrack);
+        var pctSpan = el('span',
+          'font-size:0.875rem;font-weight:700;color:var(--clr-text);' +
+          'font-variant-numeric:tabular-nums;min-width:3ch;text-align:right;',
+          pct !== null ? pct + '%' : 'N/A');
         bar.appendChild(nameWrap);
         bar.appendChild(pctSpan);
         radarCard.appendChild(bar);
       }
 
-      /* Doughnut fallback: status counts table */
-      doughnutCard.appendChild(
-        el('div',
-          'font-size:0.7rem;color:var(--clr-warning);margin-bottom:0.5rem;',
-          'Chart.js not available — showing counts as text.'));
+      doughnutCard.appendChild(el('div',
+        'font-size:0.7rem;color:var(--clr-warning);margin-bottom:0.5rem;',
+        'Chart.js not available — showing counts as text.'));
 
-      var sum2 = scoring.complianceSummary(template, assessment);
       var STAT_LABELS = [
-        { key: 'compliant',    label: 'Compliant' },
-        { key: 'partial',      label: 'Partial' },
-        { key: 'nonCompliant', label: 'Non-compliant' },
-        { key: 'na',           label: 'N/A' },
-        { key: 'unanswered',   label: 'Unanswered' }
+        { key: 'compliant',    label: 'Compliant'     },
+        { key: 'partial',      label: 'Partial'        },
+        { key: 'nonCompliant', label: 'Non-compliant'  },
+        { key: 'na',           label: 'N/A'            },
+        { key: 'unanswered',   label: 'Unanswered'     }
       ];
       var ftable = el('table', 'width:100%;border-collapse:collapse;font-size:0.875rem;');
-      for (var si = 0; si < STAT_LABELS.length; si++) {
-        var ftr = document.createElement('tr');
-        var ftd1 = el('td', 'padding:0.25rem 0.5rem;text-align:left;', STAT_LABELS[si].label);
+      for (var fsi = 0; fsi < STAT_LABELS.length; fsi++) {
+        var ftr  = document.createElement('tr');
+        var ftd1 = el('td', 'padding:0.25rem 0.5rem;text-align:left;',  STAT_LABELS[fsi].label);
         var ftd2 = el('td', 'padding:0.25rem 0.5rem;text-align:right;font-weight:700;',
-          String(sum2[STAT_LABELS[si].key]));
+          String(compSummary[STAT_LABELS[fsi].key]));
         ftr.appendChild(ftd1);
         ftr.appendChild(ftd2);
         ftable.appendChild(ftr);
@@ -370,85 +473,240 @@
     return section;
   }
 
-  /* ── Section 4: Recommendations table ───────────────────────────── */
-  function buildRecommendationsTable(recs, template, scoring, lang) {
+  /* ── 4. PER-DOMAIN DRILL-DOWN ────────────────────────────────────────── */
+  function buildDomainDrilldown(template, assessment, scoring, lang) {
+    var section = el('div', 'margin-bottom:1.5rem;');
+    section.appendChild(sectionHeading('Domain Drill-Down'));
+
+    var STATUS_INFO = {
+      'compliant':     { label: 'Compliant',     color: 'var(--clr-compliant)', bg: 'var(--clr-compliant-bg)' },
+      'partial':       { label: 'Partial',        color: 'var(--clr-partial)',   bg: 'var(--clr-partial-bg)'   },
+      'non-compliant': { label: 'Non-compliant',  color: 'var(--clr-danger)',    bg: 'var(--clr-danger-bg)'    },
+      'na':            { label: 'N/A',            color: 'var(--clr-na)',        bg: 'var(--clr-na-bg)'        },
+      'unanswered':    { label: 'Unanswered',     color: 'var(--clr-text-muted)',bg: 'var(--clr-bg)'           }
+    };
+
+    var domains = template.domains || [];
+    for (var di = 0; di < domains.length; di++) {
+      var domain  = domains[di];
+      var ds      = scoring.domainScore(domain, assessment);
+      var score   = ds.score !== null ? Math.round(ds.score) : null;
+      var sColor  = bandColor(score);
+
+      /* <details> — native collapsible, file://-safe, no JS toggle needed */
+      var details = document.createElement('details');
+      details.className = 'obs-domain-details';
+
+      /* <summary> — always-visible header row */
+      var detSummary = document.createElement('summary');
+      detSummary.className = 'obs-domain-summary';
+      detSummary.style.borderLeft = '5px solid ' + sColor;
+
+      var domTitle = el('span', 'flex:1;font-size:0.9rem;font-weight:700;color:var(--clr-navy);');
+      domTitle.textContent = pick(domain.title, lang);
+      detSummary.appendChild(domTitle);
+
+      detSummary.appendChild(el('span',
+        'font-size:0.75rem;color:var(--clr-text-muted);font-variant-numeric:tabular-nums;white-space:nowrap;',
+        ds.answered + '/' + ds.total + ' answered'));
+
+      detSummary.appendChild(el('span',
+        'font-size:0.875rem;font-weight:800;min-width:3.5rem;text-align:right;' +
+        'color:' + sColor + ';font-variant-numeric:tabular-nums;',
+        score !== null ? score + '%' : '—'));
+
+      var miniTrack = el('div',
+        'width:80px;height:6px;background:var(--clr-border);' +
+        'border-radius:999px;overflow:hidden;flex-shrink:0;');
+      var miniFill = el('div',
+        'height:100%;border-radius:999px;background:' + sColor + ';' +
+        'width:' + (score !== null ? score : 0) + '%;');
+      miniTrack.appendChild(miniFill);
+      detSummary.appendChild(miniTrack);
+
+      details.appendChild(detSummary);
+
+      /* Expanded questions list */
+      var qList = el('div',
+        'padding:0.75rem 1.25rem 1rem;border-top:1px solid var(--clr-border);');
+
+      var questions = domain.questions || [];
+      for (var qi = 0; qi < questions.length; qi++) {
+        var q       = questions[qi];
+        var ans     = (assessment.answers || {})[q.id];
+        var stKey   = (ans && ans.status) || 'unanswered';
+        var stInfo  = STATUS_INFO[stKey] || STATUS_INFO['unanswered'];
+
+        var qRow = el('div',
+          'display:flex;align-items:flex-start;gap:0.75rem;' +
+          'padding:0.5rem 0;border-bottom:1px solid var(--clr-border);');
+
+        var stBadge = el('span',
+          'flex-shrink:0;font-size:0.65rem;font-weight:700;text-transform:uppercase;' +
+          'letter-spacing:0.04em;padding:0.125rem 0.5rem;border-radius:999px;' +
+          'background:' + stInfo.bg + ';color:' + stInfo.color + ';white-space:nowrap;',
+          stInfo.label);
+        qRow.appendChild(stBadge);
+
+        var qContent = el('div', 'flex:1;min-width:0;');
+        var qId = el('span',
+          'font-family:var(--font-mono);font-size:0.65rem;color:var(--clr-text-muted);display:block;margin-bottom:0.125rem;',
+          q.id);
+        qContent.appendChild(qId);
+        var qText = el('span', 'font-size:0.8125rem;color:var(--clr-text);line-height:1.4;');
+        qText.textContent = pick(q.text, lang);
+        qContent.appendChild(qText);
+        qRow.appendChild(qContent);
+
+        var threatVal   = q.threatIndicator != null ? q.threatIndicator : 3;
+        var threatColor = threatVal >= 4 ? 'var(--clr-danger)' : (threatVal >= 3 ? 'var(--clr-warning)' : 'var(--clr-text-muted)');
+        qRow.appendChild(el('span',
+          'flex-shrink:0;font-size:0.7rem;font-weight:700;' +
+          'color:' + threatColor + ';white-space:nowrap;min-width:1.5rem;text-align:right;',
+          'T' + threatVal));
+
+        qList.appendChild(qRow);
+      }
+
+      /* Custom questions in this domain */
+      var customs = (assessment.customQuestions || {})[domain.id] || [];
+      for (var ci2 = 0; ci2 < customs.length; ci2++) {
+        var cq = customs[ci2];
+        if (!cq || (!cq.text && !cq.status)) continue;
+        var cStKey  = cq.status || 'unanswered';
+        var cStInfo = STATUS_INFO[cStKey] || STATUS_INFO['unanswered'];
+
+        var cRow = el('div',
+          'display:flex;align-items:flex-start;gap:0.75rem;' +
+          'padding:0.5rem 0;border-bottom:1px solid var(--clr-border);');
+
+        cRow.appendChild(el('span',
+          'flex-shrink:0;font-size:0.65rem;font-weight:700;text-transform:uppercase;' +
+          'letter-spacing:0.04em;padding:0.125rem 0.5rem;border-radius:999px;' +
+          'background:' + cStInfo.bg + ';color:' + cStInfo.color + ';white-space:nowrap;',
+          cStInfo.label));
+
+        var cContent = el('div', 'flex:1;min-width:0;');
+        cContent.appendChild(el('span',
+          'font-family:var(--font-mono);font-size:0.65rem;color:var(--clr-text-muted);display:block;margin-bottom:0.125rem;',
+          'custom-' + domain.id + '-' + ci2));
+        var cTextEl = el('span', 'font-size:0.8125rem;color:var(--clr-text);line-height:1.4;font-style:italic;');
+        cTextEl.textContent = (cq.text && typeof cq.text === 'string') ? cq.text : '';
+        cContent.appendChild(cTextEl);
+        cRow.appendChild(cContent);
+
+        cRow.appendChild(el('span',
+          'flex-shrink:0;font-size:0.65rem;color:var(--clr-text-muted);white-space:nowrap;',
+          'custom'));
+
+        qList.appendChild(cRow);
+      }
+
+      details.appendChild(qList);
+      section.appendChild(details);
+    }
+
+    return section;
+  }
+
+  /* ── 5. ACTIONABLE GAPS — prioritised remediation ────────────────────── */
+  function buildActionableGaps(recs, template, lang) {
     var section = el('div', 'margin-bottom:2rem;');
-    section.appendChild(sectionHeading('Recommendations'));
+    section.appendChild(sectionHeading('Actionable Gaps — Prioritised Remediation'));
 
     if (!recs || recs.length === 0) {
-      section.appendChild(
-        el('p', 'color:var(--clr-text-muted);',
-          'No recommendations — all answered questions are compliant or N/A.'));
+      section.appendChild(el('p', 'color:var(--clr-text-muted);',
+        'No gaps to remediate — all answered questions are compliant or N/A.'));
       return section;
     }
 
-    /* Build domain id→title lookup */
+    /* Domain id → title lookup */
     var domTitles = {};
-    var domains = template.domains || [];
+    var domains   = template.domains || [];
     for (var di = 0; di < domains.length; di++) {
       domTitles[domains[di].id] = pick(domains[di].title, lang);
     }
 
-    var wrap = el('div', 'overflow-x:auto;');
+    var wrap  = el('div', 'overflow-x:auto;');
     var table = el('table', 'width:100%;border-collapse:collapse;font-size:0.8125rem;');
 
-    /* Header */
+    /* Table header */
     var thead = document.createElement('thead');
     var hrow  = document.createElement('tr');
-    var COLS = ['Domain', 'Question', 'Status', 'Threat', 'References', 'Remediation'];
+    hrow.style.background = 'var(--clr-bg)';
+    var COLS = ['#', 'Domain', 'Question', 'Status', 'Threat', 'References', 'Remediation'];
     for (var ci = 0; ci < COLS.length; ci++) {
       var th = el('th',
-        'text-align:left;padding:0.5rem 0.75rem;border-bottom:2px solid var(--clr-border);' +
-        'font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--clr-text-muted);' +
-        'white-space:nowrap;',
+        'text-align:left;padding:0.5rem 0.75rem;' +
+        'border-bottom:2px solid var(--clr-border);' +
+        'font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em;' +
+        'color:var(--clr-text-muted);white-space:nowrap;',
         COLS[ci]);
       hrow.appendChild(th);
     }
     thead.appendChild(hrow);
     table.appendChild(thead);
 
-    /* Body */
-    var tbody = document.createElement('tbody');
-    var CELL = 'padding:0.5rem 0.75rem;border-bottom:1px solid var(--clr-border);vertical-align:top;';
+    /* Table body */
+    var tbody   = document.createElement('tbody');
+    var CELL    = 'padding:0.5rem 0.75rem;border-bottom:1px solid var(--clr-border);vertical-align:top;';
+    var hasCrit = false;
 
     for (var ri = 0; ri < recs.length; ri++) {
-      var rec = recs[ri];
-      var tr  = document.createElement('tr');
-      if (ri % 2 !== 0) tr.style.background = 'var(--clr-bg)';
+      var rec        = recs[ri];
+      var isCritical = rec.threat >= 4;
+      if (isCritical) hasCrit = true;
+
+      var tr = document.createElement('tr');
+      if (isCritical) {
+        tr.style.cssText = 'background:var(--clr-danger-bg);border-left:3px solid var(--clr-danger);';
+      } else if (ri % 2 !== 0) {
+        tr.style.background = 'var(--clr-bg)';
+      }
+
+      /* # */
+      tr.appendChild(el('td',
+        CELL + 'font-size:0.7rem;color:var(--clr-text-muted);text-align:center;font-weight:700;',
+        String(ri + 1)));
 
       /* Domain */
-      var tdDomain = el('td', CELL + 'font-size:0.75rem;color:var(--clr-text-muted);',
-        domTitles[rec.domainId] || rec.domainId);
-      tr.appendChild(tdDomain);
+      tr.appendChild(el('td',
+        CELL + 'font-size:0.75rem;color:var(--clr-text-muted);white-space:nowrap;',
+        domTitles[rec.domainId] || rec.domainId));
 
-      /* Question */
-      var tdQ = el('td', CELL);
+      /* Question ID + text */
+      var tdQ = document.createElement('td');
+      tdQ.style.cssText = CELL;
       var qIdSpan = el('span',
         'font-family:var(--font-mono);font-size:0.7rem;color:var(--clr-text-muted);display:block;',
         rec.qid);
-      var qText = document.createTextNode(pick(rec.text, lang));
+      var qTextNode = document.createElement('span');
+      qTextNode.style.cssText = 'font-size:0.8125rem;line-height:1.4;';
+      qTextNode.textContent = pick(rec.text, lang);
       tdQ.appendChild(qIdSpan);
-      tdQ.appendChild(qText);
+      tdQ.appendChild(qTextNode);
       tr.appendChild(tdQ);
 
       /* Status */
-      var statusColor = rec.status === 'non-compliant' ? 'var(--clr-danger)' : 'var(--clr-partial)';
-      var statusLabel = rec.status === 'non-compliant' ? 'Non-compliant' : 'Partial';
-      var tdStatus = el('td', CELL + 'font-weight:600;white-space:nowrap;color:' + statusColor + ';',
-        statusLabel);
-      tr.appendChild(tdStatus);
+      var stColor = rec.status === 'non-compliant' ? 'var(--clr-danger)' : 'var(--clr-partial)';
+      var stLabel = rec.status === 'non-compliant' ? 'Non-compliant' : 'Partial';
+      tr.appendChild(el('td',
+        CELL + 'font-weight:700;white-space:nowrap;color:' + stColor + ';', stLabel));
 
       /* Threat */
-      var threatColor = '';
-      if (rec.threat >= 4) threatColor = 'color:var(--clr-danger);';
-      else if (rec.threat >= 3) threatColor = 'color:var(--clr-warning);';
+      var tColor = rec.threat >= 4
+        ? 'var(--clr-danger)'
+        : (rec.threat >= 3 ? 'var(--clr-warning)' : 'var(--clr-text-muted)');
       var tdThreat = el('td',
-        CELL + 'text-align:center;font-weight:700;' + threatColor,
-        rec.threat != null ? String(rec.threat) : '—');
+        CELL + 'text-align:center;font-weight:800;color:' + tColor + ';' +
+        (rec.threat >= 4 ? 'font-size:1rem;' : ''));
+      tdThreat.textContent = (rec.threat != null ? String(rec.threat) : '—') +
+        (isCritical ? ' ⚠' : '');
       tr.appendChild(tdThreat);
 
       /* References */
-      var tdRefs = el('td', CELL + 'font-size:0.7rem;color:var(--clr-text-muted);');
+      var tdRefs = document.createElement('td');
+      tdRefs.style.cssText = CELL + 'font-size:0.7rem;color:var(--clr-text-muted);';
       if (rec.references) {
         var refParts = [];
         var REF_KEYS = ['iso27001', 'iso27002', 'nis2', 'cis', 'other'];
@@ -457,21 +715,22 @@
             refParts.push(REF_KEYS[rk].toUpperCase() + ': ' + rec.references[REF_KEYS[rk]]);
           }
         }
-        tdRefs.textContent = refParts.join(' · ');
+        tdRefs.textContent = refParts.join(' · ') || '—';
       } else {
         tdRefs.textContent = '—';
       }
       tr.appendChild(tdRefs);
 
       /* Remediation */
-      var tdRem = el('td', CELL + 'font-size:0.75rem;');
+      var tdRem = document.createElement('td');
+      tdRem.style.cssText = CELL + 'font-size:0.75rem;';
       var rem = rec.remediation;
       if (rem) {
         var remParts = [];
         if (rem.owner)      remParts.push('Owner: ' + rem.owner);
         if (rem.targetDate) remParts.push('By: ' + rem.targetDate);
         if (rem.status && rem.status !== 'none') {
-          remParts.push(rem.status.replace(/-/g, ' '));
+          remParts.push(rem.status.replace(/-/g, ' '));
         }
         tdRem.textContent = remParts.join(' · ') || '—';
       } else {
@@ -481,20 +740,30 @@
 
       tbody.appendChild(tr);
     }
+
     table.appendChild(tbody);
     wrap.appendChild(table);
     section.appendChild(wrap);
+
+    if (hasCrit) {
+      section.appendChild(el('div',
+        'margin-top:0.5rem;font-size:0.7rem;color:var(--clr-text-muted);',
+        '⚠ Rows highlighted in red have threat level 4–5 (critical) — address these first.'));
+    }
+
     return section;
   }
 
-  /* ── Public: renderDashboard ─────────────────────────────────────── */
+  /* ── Public: renderDashboard ─────────────────────────────────────────── */
+  /* Called fresh on every Dashboard tab open and on language change.       */
+  /* Everything is recomputed from the passed assessment — no stale data.   */
   function renderDashboard(container, template, assessment, lang) {
     if (!container || !template || !assessment) return;
 
-    /* Destroy old chart instances before clearing DOM */
+    /* Destroy old Chart.js instances before clearing the DOM */
     destroyCharts();
 
-    /* Clear panel */
+    /* Clear the panel */
     while (container.firstChild) container.removeChild(container.firstChild);
 
     var scoring = root.OBS.scoring;
@@ -502,47 +771,48 @@
 
     lang = lang || 'en';
 
-    var comp    = scoring.completeness(template, assessment);
-    var overall = scoring.overallScore(template, assessment);
-    var mat     = scoring.maturity(overall, template.maturityLevels || []);
-    var summary = scoring.complianceSummary(template, assessment);
-    var recs    = scoring.recommendations(template, assessment);
+    /* Recompute all metrics from the current assessment on every call */
+    var comp       = scoring.completeness(template, assessment);
+    var overall    = scoring.overallScore(template, assessment);
+    var mat        = scoring.maturity(overall, template.maturityLevels || []);
+    var compSum    = scoring.complianceSummary(template, assessment);
+    var recs       = scoring.recommendations(template, assessment);
 
-    /* Outer content wrapper */
     var wrapper = el('div', 'padding:2rem 2.5rem;max-width:1100px;');
 
-    /* 1 — Completeness (always first) */
-    wrapper.appendChild(buildCompletenessBanner(comp));
+    /* 1 — Hero summary (score %, maturity, completeness) */
+    wrapper.appendChild(buildHeroCard(overall, mat, comp, lang));
 
-    /* 2 — Maturity badge + Compliance summary (side by side) */
-    var row2 = el('div',
-      'display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;');
-    row2.appendChild(buildMaturityCard(overall, mat, lang));
-    row2.appendChild(buildSummaryCard(summary, lang));
-    wrapper.appendChild(row2);
+    /* 2 — Three metric cards (risk, framework coverage, status) */
+    wrapper.appendChild(buildMetricsRow(template, assessment, scoring, compSum));
 
-    /* 3 — Charts */
-    wrapper.appendChild(buildChartSection(template, assessment, scoring, lang));
+    /* 3 — Radar + doughnut charts */
+    wrapper.appendChild(buildChartSection(template, assessment, scoring, compSum, lang));
 
-    /* 4 — Recommendations table */
-    wrapper.appendChild(buildRecommendationsTable(recs, template, scoring, lang));
+    /* 4 — Per-domain collapsible drill-down */
+    wrapper.appendChild(buildDomainDrilldown(template, assessment, scoring, lang));
+
+    /* 5 — Actionable gaps table, sorted by severity */
+    wrapper.appendChild(buildActionableGaps(recs, template, lang));
 
     container.appendChild(wrapper);
   }
 
-  /* ── Public: chartImages ─────────────────────────────────────────── */
+  /* ── Public: chartImages ─────────────────────────────────────────────── */
+  /* Returns {radar, doughnut} PNG data URLs for PDF export.               */
+  /* Returns {} if Chart.js was absent (no canvas rendered).               */
   function chartImages() {
     var result = {};
     if (_radarCanvas) {
-      try { result.radar = _radarCanvas.toDataURL('image/png'); } catch (e) { /* ignore */ }
+      try { result.radar    = _radarCanvas.toDataURL('image/png');    } catch (e) {}
     }
     if (_doughnutCanvas) {
-      try { result.doughnut = _doughnutCanvas.toDataURL('image/png'); } catch (e) { /* ignore */ }
+      try { result.doughnut = _doughnutCanvas.toDataURL('image/png'); } catch (e) {}
     }
     return result;
   }
 
-  /* ── Attach to OBS namespace ─────────────────────────────────────── */
+  /* ── Attach to OBS namespace ─────────────────────────────────────────── */
   root.OBS.report = {
     renderDashboard: renderDashboard,
     chartImages: chartImages
