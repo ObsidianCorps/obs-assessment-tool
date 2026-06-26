@@ -9,8 +9,8 @@
       sq: 'Pyetësor i Vlerësimit të Sigurisë së Informacionit'
     },
     description: {
-      en: 'A consultant\'s diagnostic tool mapped to ISO/IEC 27001:2022, ISO/IEC 27002:2022, the NIS2 Directive (EU 2022/2555) and CIS Controls v8. 46 questions across 8 domains.',
-      sq: 'Mjet diagnostikues i konsulentit i hartuar sipas ISO/IEC 27001:2022, ISO/IEC 27002:2022, Direktivës NIS2 (BE 2022/2555) dhe Kontrolleve CIS v8. 46 pyetje në 8 fusha.'
+      en: 'A consultant\'s diagnostic tool mapped to ISO/IEC 27001:2022, ISO/IEC 27002:2022, the NIS2 Directive (EU 2022/2555) and CIS Controls v8. 58 questions across 8 domains.',
+      sq: 'Mjet diagnostikues i konsulentit i hartuar sipas ISO/IEC 27001:2022, ISO/IEC 27002:2022, Direktivës NIS2 (BE 2022/2555) dhe Kontrolleve CIS v8. 58 pyetje në 8 fusha.'
     },
     languages: ['en', 'sq'],
     translationStatus: { sq: 'machine-draft' },
@@ -189,6 +189,60 @@
               sq: 'Si merr organi drejtues garanci se risqet e sigurisë kibernetike po menaxhohen efektivisht?'
             },
             references: { iso27001: 'A.5.4', iso27002: '5.4 Management responsibilities', nis2: 'Art. 20 Governance; Art. 20(1) Management oversight', cis: 'CIS 17' }
+          },
+          {
+            id: 'Q51', kind: 'new', threatIndicator: 3, weight: 1.0, critical: false,
+            text: {
+              en: 'Does the organisation consume threat intelligence (e.g. national CERT advisories, sector ISACs, vendor feeds) and use it to inform risk assessment and security controls?',
+              sq: 'A konsumon organizata inteligjencë kërcënimi (p.sh. këshilla nga CERT kombëtar, ISAC sektorial, furnizime furnitorësh) dhe e përdor atë për të informuar vlerësimin e riskut dhe kontrollet e sigurisë?'
+            },
+            goodPractice: {
+              en: [
+                'Subscriptions to at least one authoritative threat intelligence source relevant to the sector (e.g. national CERT mailing list, sector ISAC)',
+                'A defined owner or team responsible for reviewing threat advisories and translating them into operational actions',
+                'Threat intelligence findings feed into the risk assessment cycle and inform prioritisation of vulnerability remediation',
+                'Indicators of compromise (IOCs) from credible feeds are operationalised into detection or blocking rules where technically feasible'
+              ],
+              sq: [
+                'Abonime në të paktën një burim të autorizuar inteligjence kërcënimi të rëndësishëm për sektorin (p.sh. lista postare e CERT kombëtar, ISAC sektorial)',
+                'Pronar ose ekip i përcaktuar përgjegjës për rishikimin e këshillave të kërcënimit dhe shndërrimin e tyre në veprime operacionale',
+                'Gjetjet e inteligjencës së kërcënimit ushqejnë ciklin e vlerësimit të riskut dhe informojnë prioritizimin e korrigjimit të dobësive',
+                'Treguesit e kompromisit (IOC) nga furnizime të besueshme operacionalizohen në rregulla zbulimi ose bllokimi ku është teknikisht e realizueshme'
+              ]
+            },
+            followUp: {
+              en: 'How are threat intelligence advisories acted on — who reviews them, and how quickly are relevant mitigations applied?',
+              sq: 'Si veprohet mbi këshillat e inteligjencës së kërcënimit — kush i rishikon ato, dhe sa shpejt zbatohen masat zbutëse përkatëse?'
+            },
+            references: { iso27001: 'A.5.7', iso27002: '5.7 Threat intelligence', nis2: 'Art. 21(2)(a)', cis: 'CIS 13.9, CIS 17' }
+          },
+          {
+            id: 'Q55', kind: 'new', threatIndicator: 3, weight: 1.0, critical: false,
+            text: {
+              en: 'Is information security integrated into project management — with security-by-design requirements considered at the outset of new projects and deployments?',
+              sq: 'A integrohet siguria e informacionit në menaxhimin e projekteve — me kërkesat e sigurisë-by-design të konsideruara në fillim të projekteve dhe vendosjeve të reja?'
+            },
+            goodPractice: {
+              en: [
+                'A project management methodology or checklist that includes a mandatory security review gate at the design/initiation stage',
+                'Security requirements (confidentiality, integrity, availability, access control, logging) are captured as acceptance criteria before a project begins build',
+                'Data protection impact assessments (DPIAs) are initiated early for projects involving personal data, not as an afterthought',
+                'Security sign-off is required before any new system or significant change is deployed to production',
+                'Post-deployment security reviews are scheduled as part of project closure'
+              ],
+              sq: [
+                'Metodologji ose listë kontrolluese e menaxhimit të projekteve që përfshin një pikë të detyrueshme rishikimi sigurie në fazën e projektimit/inicimit',
+                'Kërkesat e sigurisë (konfidencialiteti, integriteti, disponueshmëria, kontrolli i aksesit, regjistrimi) kapen si kritere pranimi para fillimit të ndërtimit të projektit',
+                'Vlerësimet e ndikimit mbi mbrojtjen e të dhënave (DPIA) inicohen herët për projektet që përfshijnë të dhëna personale, jo si mendim i vonuar',
+                'Miratimi i sigurisë kërkohet para vendosjes në prodhim të çdo sistemi të ri ose ndryshimi të rëndësishëm',
+                'Rishikimet e sigurisë pas vendosjes planifikohen si pjesë e mbylljes së projektit'
+              ]
+            },
+            followUp: {
+              en: 'Can you give an example of a recent project where security requirements were defined at the design stage — what did that process look like?',
+              sq: 'A mund të jepni një shembull të një projekti të fundit ku kërkesat e sigurisë u përcaktuan në fazën e projektimit — si dukej ai proces?'
+            },
+            references: { iso27001: 'A.5.8', iso27002: '5.8 Information security in project management', nis2: 'Art. 21(2)(e)', cis: 'CIS 16' }
           }
         ]
       },
@@ -597,6 +651,34 @@
               sq: 'Cila është koha e funksionimit e dokumentuar, dhe a është testuar një skenar i plotë i dështimit të energjisë?'
             },
             references: { iso27001: 'A.7.11, A.7.12', iso27002: '7.11 Supporting utilities; 7.12 Cabling security', nis2: 'Art. 21(1) Resilience of network and information systems', cis: 'CIS 1' }
+          },
+          {
+            id: 'Q54', kind: 'new', threatIndicator: 3, weight: 1.0, critical: false,
+            text: {
+              en: 'Are equipment areas protected against environmental threats — fire, extreme temperatures, flooding, and humidity — and are these protections tested?',
+              sq: 'A mbrohen zonat e pajisjeve ndaj kërcënimeve mjedisore — zjarrit, temperaturave ekstreme, përmbytjeve dhe lagështisë — dhe a testohen këto mbrojtje?'
+            },
+            goodPractice: {
+              en: [
+                'Automatic fire detection and suppression systems installed in server rooms and critical equipment areas, with periodic inspection and test records',
+                'HVAC or equivalent climate control maintains temperature and humidity within manufacturer-specified safe operating ranges, with alerting on exceedance',
+                'Flood/water ingress risk assessed and mitigated (e.g. raised flooring, no overhead water pipes, water detection sensors where relevant)',
+                'Environmental monitoring alerts are routed to a responsible owner and acted upon promptly',
+                'Environmental control systems are included in the periodic testing and maintenance schedule'
+              ],
+              sq: [
+                'Sisteme automatike zbulimi dhe shuarjeje të zjarrit të instaluara në dhomat e serverëve dhe zonat e pajisjeve kritike, me rekorde inspektimi dhe testimi periodik',
+                'HVAC ose sistem ekuivalent i kontrollit të klimës mban temperaturën dhe lagështinë brenda intervaleve të sigurta operative të specifikuara nga prodhuesi, me alarm kur tejkalohen',
+                'Risku i përmbytjes/hyrjes së ujit vlerësohet dhe zbutet (p.sh. dysheme e ngritur, asnjë tub uji sipër, sensorë zbulimi uji ku është relevant)',
+                'Alarmet e monitorimit mjedisor drejtohen tek një pronar përgjegjës dhe trajtohen menjëherë',
+                'Sistemet e kontrollit mjedisor përfshihen në orarin e testimit dhe mirëmbajtjes periodike'
+              ]
+            },
+            followUp: {
+              en: 'When were fire suppression, HVAC, and environmental sensors last inspected and tested, and are records available?',
+              sq: 'Kur u inspektuan dhe testuan për herë të fundit sistemet e shuarjes së zjarrit, HVAC dhe sensorët mjedisorë, dhe a janë regjistrimet disponibël?'
+            },
+            references: { iso27001: 'A.7.5', iso27002: '7.5 Protecting against physical and environmental threats', nis2: 'Art. 21(1)', cis: 'CIS 1' }
           }
         ]
       },
@@ -885,6 +967,144 @@
               sq: 'A është validuar zbatimi i DMARC-it nga fundi në fund, dhe a rishikohen raportet agregate të DMARC-it për të zbuluar përpjekje mashtrimi?'
             },
             references: { iso27001: 'A.8.20, A.5.14', iso27002: '8.20 Networks security; 5.14 Information transfer', nis2: 'Art. 21(2)(g) Cyber hygiene', cis: 'CIS 9' }
+          },
+          {
+            id: 'Q47', kind: 'new', threatIndicator: 4, weight: 1.2, critical: true,
+            text: {
+              en: 'Is there a formal IT change management process — with requests, approvals, testing, and rollback procedures — covering both infrastructure and application changes?',
+              sq: 'A ka një proces formal të menaxhimit të ndryshimeve IT — me kërkesa, miratime, testim dhe procedura kthimi prapa — që mbulon si ndryshimet e infrastrukturës ashtu edhe ndryshimet e aplikacioneve?'
+            },
+            goodPractice: {
+              en: [
+                'A documented change management process requiring formal request, impact assessment, and approval before any change is implemented in production',
+                'Changes tested in a non-production environment before deployment, with acceptance criteria defined',
+                'Rollback procedures documented and verified for each significant change',
+                'Emergency/expedited change procedure in place for urgent fixes, with retrospective review',
+                'A change log maintained with records of who approved, tested, and deployed each change'
+              ],
+              sq: [
+                'Proces i dokumentuar i menaxhimit të ndryshimeve që kërkon kërkesë zyrtare, vlerësim ndikimi dhe miratim para zbatimit të çdo ndryshimi në prodhim',
+                'Ndryshimet testohen në një mjedis jo-prodhues para vendosjes, me kritere pranimi të përcaktuara',
+                'Procedurat e kthimit prapa të dokumentuara dhe të verifikuara për çdo ndryshim të rëndësishëm',
+                'Procedurë ndryshimi urgjent/i përshpejtuar në vend për rregullime të ngutshme, me rishikim retrospektiv',
+                'Regjistër ndryshimesh i mirëmbajtur me regjistrime se kush miratoi, testoi dhe vendosi çdo ndryshim'
+              ]
+            },
+            followUp: {
+              en: 'How are emergency changes handled, and how are they retrospectively reviewed to ensure the change management process is not systematically bypassed?',
+              sq: 'Si trajtohen ndryshimet urgjente, dhe si rishikohen retrospektivisht për të siguruar që procesi i menaxhimit të ndryshimeve të mos anashkalohet sistematikisht?'
+            },
+            references: { iso27001: 'A.8.32', iso27002: '8.32 Change management', nis2: 'Art. 21(2)(e)', cis: 'CIS 4.1, CIS 7.4' }
+          },
+          {
+            id: 'Q48', kind: 'new', threatIndicator: 4, weight: 1.2, critical: true,
+            text: {
+              en: 'Are secure protocols enforced across the organisation (TLS 1.2+/1.3, HTTPS), and have legacy insecure protocols such as Telnet, FTP, and SNMPv1 been disabled?',
+              sq: 'A zbatohen protokollet e sigurta në të gjithë organizatën (TLS 1.2+/1.3, HTTPS), dhe a janë çaktivizuar protokollet e vjetëruara të pasigurta si Telnet, FTP dhe SNMPv1?'
+            },
+            goodPractice: {
+              en: [
+                'TLS 1.2 or 1.3 enforced for all internal and external web-based services; TLS 1.0 and 1.1 disabled',
+                'HTTPS enforced for all externally accessible web applications and services, with HTTP-to-HTTPS redirect and HSTS headers configured',
+                'Telnet, FTP, SNMPv1/v2c, and other cleartext management protocols disabled on all network devices and servers where they are not operationally required',
+                'A protocol audit or configuration baseline review performed periodically to identify and remediate non-compliant configurations',
+                'Encrypted alternatives (SFTP/SCP, SSH, SNMPv3) used wherever a cleartext protocol would otherwise be needed'
+              ],
+              sq: [
+                'TLS 1.2 ose 1.3 i zbatuar për të gjitha shërbimet e bazuara në web të brendshme dhe të jashtme; TLS 1.0 dhe 1.1 të çaktivizuara',
+                'HTTPS i zbatuar për të gjitha aplikacionet dhe shërbimet web të aksesueshme nga jashtë, me ridrejtim HTTP-në-HTTPS dhe headers HSTS të konfiguruara',
+                'Telnet, FTP, SNMPv1/v2c dhe protokollet e tjera të menaxhimit të tekstit të qartë çaktivizuara në të gjitha pajisjet e rrjetit dhe serverët ku nuk kërkohen operacionalisht',
+                'Auditim protokolli ose rishikim i bazës së konfigurimit kryer periodikisht për të identifikuar dhe korrigjuar konfigurime jo-konforme',
+                'Alternativa të enkriptuara (SFTP/SCP, SSH, SNMPv3) të përdorura kudo ku ndryshe do të nevojitej protokoll i tekstit të qartë'
+              ]
+            },
+            followUp: {
+              en: 'Has a network scan or configuration audit confirmed that no cleartext management protocols are exposed on the internal network or internet-facing interfaces?',
+              sq: 'A ka konfirmuar një skanim rrjeti ose auditim konfigurimi se asnjë protokoll menaxhimi tekst të qartë nuk është i ekspozuar në rrjetin e brendshëm ose ndërfaqet e hapura ndaj internetit?'
+            },
+            references: { iso27001: 'A.8.21', iso27002: '8.21 Security of network services', nis2: 'Art. 21(2)(j)', cis: 'CIS 12.6' }
+          },
+          {
+            id: 'Q49', kind: 'new', threatIndicator: 3, weight: 1.0, critical: false,
+            text: {
+              en: 'Is web filtering in place to block access to malicious or high-risk web categories, and are browsers hardened against common attack vectors?',
+              sq: 'A ka filtrimi i uebit në vend për të bllokuar aksesin në kategori maliciozë ose me risk të lartë të uebit, dhe a janë shfletuesit e ngurtësuar kundër vektorëve të zakonshëm të sulmit?'
+            },
+            goodPractice: {
+              en: [
+                'A web proxy or DNS-based filtering solution in place that blocks known-malicious domains and high-risk categories (e.g. malware distribution, phishing, command-and-control sites)',
+                'Browser policies configured centrally to disable or restrict high-risk features (e.g. unwanted extensions, automatic downloads, Java applets)',
+                'Browsers kept up to date with security patches applied promptly, ideally via automated update or centralised management',
+                'HTTPS inspection or equivalent visibility into encrypted web traffic where technically feasible and legally permissible'
+              ],
+              sq: [
+                'Zgjidhje filtrimi e bazuar në proxy web ose DNS në vend që bllokon domenet me keqdashje të njohura dhe kategoritë me risk të lartë (p.sh. shpërndarja e malware, phishing, sitet e komandës dhe kontrollit)',
+                'Politika shfletuesi të konfiguruara centralisht për të çaktivizuar ose kufizuar veçoritë me risk të lartë (p.sh. shtesa të padëshiruara, shkarkime automatike, Java applets)',
+                'Shfletuesit mbahen të përditësuar me patch-e sigurie të zbatuara menjëherë, mundësisht nëpërmjet përditësimit automatik ose menaxhimit të centralizuar',
+                'Inspektimi HTTPS ose dukshmëri ekuivalente në trafikun e uebit të enkriptuar ku është teknikisht e realizueshme dhe ligjërisht e lejueshme'
+              ]
+            },
+            followUp: {
+              en: 'Are web filtering logs reviewed to identify repeat policy violations or signs of malware communication, and is there a process for handling violations?',
+              sq: 'A rishikohen regjistrat e filtrimit të uebit për të identifikuar shkelje të përsëritura të politikës ose shenja të komunikimit të malware, dhe a ka një proces për trajtimin e shkeljeve?'
+            },
+            references: { iso27001: 'A.8.23', iso27002: '8.23 Web filtering', nis2: 'Art. 21(2)(g)', cis: 'CIS 9.3, CIS 4.8' }
+          },
+          {
+            id: 'Q56', kind: 'new', threatIndicator: 3, weight: 1.0, critical: false,
+            text: {
+              en: 'Are collaboration and communications platforms (voice, video, instant messaging, and file sharing) formally approved, encrypted, and access-controlled?',
+              sq: 'A janë platformat e bashkëpunimit dhe komunikimit (zanore, video, mesazhe të çastit dhe ndarje skedarësh) të miratuar zyrtarisht, të enkriptuara dhe me kontroll aksesi?'
+            },
+            goodPractice: {
+              en: [
+                'An approved list of collaboration and communications tools, covering voice, video, text/instant messaging, and file sharing; unsanctioned shadow-IT tools are prohibited',
+                'Approved tools use end-to-end or transport encryption; use of unencrypted communication channels for business content is prohibited',
+                'Access to communications platforms controlled via organisational accounts with MFA, not personal accounts',
+                'Retention and data handling policies defined for communications platforms, aligned with legal obligations and data classification',
+                'Guest/external participant access scoped to the minimum required, with controls to prevent unintended data sharing'
+              ],
+              sq: [
+                'Listë e miratuar e mjeteve të bashkëpunimit dhe komunikimit, që mbulon zanore, video, tekst/mesazhe të çastit dhe ndarje skedarësh; mjetet e shadow-IT të pasanksionuara janë të ndaluara',
+                'Mjetet e miratuara përdorin enkriptim nga fundi-në-fund ose transport; përdorimi i kanaleve të komunikimit të pakriptuara për përmbajtje biznesi është i ndaluar',
+                'Aksesi në platformat e komunikimit kontrollohet nëpërmjet llogarive organizative me MFA, jo llogarive personale',
+                'Politikat e mbajtjes dhe trajtimit të të dhënave të përcaktuara për platformat e komunikimit, të harmonizuara me detyrimet ligjore dhe klasifikimin e të dhënave',
+                'Aksesi i mysafirëve/pjesëmarrësve të jashtëm i kufizuar në minimumin e nevojshëm, me kontrolle për të parandaluar ndarjen e paqëllimtë të të dhënave'
+              ]
+            },
+            followUp: {
+              en: 'Is there a process to identify and block the use of unsanctioned communications tools, and has shadow-IT messaging use been assessed?',
+              sq: 'A ka një proces për identifikimin dhe bllokimin e përdorimit të mjeteve të komunikimit të pasanksionuara, dhe a është vlerësuar përdorimi i mesazheve shadow-IT?'
+            },
+            references: { iso27001: 'A.8.20, A.8.21', iso27002: '8.20 Networks security; 8.21 Security of network services', nis2: 'Art. 21(2)(j) Secured voice/video/text communications', cis: 'CIS 9, CIS 12' }
+          },
+          {
+            id: 'Q58', kind: 'new', threatIndicator: 4, weight: 1.2, critical: true,
+            text: {
+              en: 'Is intrusion detection / network threat monitoring in place, providing near-real-time alerting on anomalous or malicious activity, with defined response procedures — beyond basic log collection?',
+              sq: 'A ka zbulim ndërhyrjesh / monitorim kërcënimesh të rrjetit në vend, duke siguruar alarmim afër-real-time mbi aktivitetin anomal ose keqdashës, me procedura reagimi të përcaktuara — përtej mbledhjes bazike të regjistrave?'
+            },
+            goodPractice: {
+              en: [
+                'An IDS/IPS or network threat detection solution monitoring critical network segments, not only perimeter traffic',
+                'Anomaly detection or behavioural analytics capable of identifying lateral movement, unusual data volumes, and credential abuse',
+                'Alerts triaged and responded to in near-real-time by a defined owner or SOC function; alerting SLAs defined',
+                'IDS/IPS signatures and detection rules kept up to date and tuned to reduce false-positive noise',
+                'Threat detection findings integrated into the incident management process with documented escalation and response procedures'
+              ],
+              sq: [
+                'Zgjidhje IDS/IPS ose zbulimi kërcënimesh të rrjetit që monitoron segmente kritike të rrjetit, jo vetëm trafikun e perimetrit',
+                'Zbulim anomalish ose analitikë sjelljeje i aftë të identifikojë lëvizje anësore, vëllime të pazakonta të dhënash dhe abuzim kredencialesh',
+                'Alarmet e triazhura dhe të reaguar afër-real-time nga një pronar ose funksion SOC i përcaktuar; SLA-të e alarmimit të përcaktuara',
+                'Nënshkrimet IDS/IPS dhe rregullat e zbulimit mbahen të përditësuara dhe të akordura për të reduktuar zhurmën false-positive',
+                'Gjetjet e zbulimit të kërcënimeve integrohen në procesin e menaxhimit të incidenteve me procedura eskalimi dhe reagimi të dokumentuara'
+              ]
+            },
+            followUp: {
+              en: 'How are IDS/IPS alerts reviewed and acted on — is there a defined SLA for responding to high-severity network threat alerts, and who is responsible?',
+              sq: 'Si rishikohen dhe veprimet ndaj alarmeve IDS/IPS — a ka SLA të përcaktuar për reagimin ndaj alarmeve të kërcënimeve të rrjetit me ashpërsi të lartë, dhe kush është përgjegjës?'
+            },
+            references: { iso27001: 'A.8.16', iso27002: '8.16 Monitoring activities', nis2: 'Art. 21(2)(b)', cis: 'CIS 13.3, CIS 13.7' }
           }
         ]
       },
@@ -1177,6 +1397,62 @@
               sq: 'A zbatohen kontrollet DLP teknikisht, apo pajtueshmëria mbështetet kryesisht tek ndërgjegjësimi i përdoruesit dhe politika?'
             },
             references: { iso27001: 'A.8.12', iso27002: '8.12 Data leakage prevention', nis2: 'Art. 21(2)(h)', cis: 'CIS 3.13' }
+          },
+          {
+            id: 'Q52', kind: 'new', threatIndicator: 3, weight: 1.0, critical: false,
+            text: {
+              en: 'Are security requirements defined before acquiring commercial software or cloud services, and is security assessed as part of the selection process?',
+              sq: 'A përcaktohen kërkesat e sigurisë para blerjes së softuerit komercial ose shërbimeve cloud, dhe a vlerësohet siguria si pjesë e procesit të përzgjedhjes?'
+            },
+            goodPractice: {
+              en: [
+                'A documented process for capturing security and data-protection requirements before initiating any software or SaaS procurement',
+                'Security evaluation criteria included in RFPs and vendor assessments — covering data handling, encryption, access control, incident notification, and certifications',
+                'Vendor security documentation (e.g. ISO 27001 certificate, SOC 2 report, penetration test summary) reviewed before contracting',
+                'Security requirements flowed down into the contract or terms of service',
+                'Post-procurement security configuration review performed before the product goes live in the production environment'
+              ],
+              sq: [
+                'Proces i dokumentuar për kapjen e kërkesave të sigurisë dhe mbrojtjes së të dhënave para inicimit të çdo prokurimi softueri ose SaaS',
+                'Kriteret e vlerësimit të sigurisë të përfshira në RFP-të dhe vlerësimet e furnitorëve — që mbulojnë trajtimin e të dhënave, enkriptimin, kontrollin e aksesit, njoftimin e incidenteve dhe certifikimet',
+                'Dokumentacioni i sigurisë së furnitorëve (p.sh. certifikata ISO 27001, raporti SOC 2, përmbledhja e testit të depërtimit) rishikuar para kontraktimit',
+                'Kërkesat e sigurisë të transferuara në kontratë ose kushtet e shërbimit',
+                'Rishikim i konfigurimit të sigurisë pas prokurimit kryer para se produkti të funksionojë në mjedisin e prodhimit'
+              ]
+            },
+            followUp: {
+              en: 'What security due-diligence was performed before your most recently adopted software or SaaS platform was contracted — who reviewed it and what did they assess?',
+              sq: 'Çfarë due-diligence sigurie u krye para kontraktimit të softuerit ose platformës SaaS të adoptuar së fundmi — kush e rishikoi dhe çfarë vlerësoi?'
+            },
+            references: { iso27001: 'A.8.26, A.8.27', iso27002: '8.26 Application security requirements; 8.27 Secure system architecture and engineering principles', nis2: 'Art. 21(2)(e)', cis: 'CIS 16.1' }
+          },
+          {
+            id: 'Q53', kind: 'new', threatIndicator: 3, weight: 1.0, critical: false,
+            text: {
+              en: 'Is there an authorised software inventory, and is the installation of unauthorised or shadow-IT software controlled and monitored?',
+              sq: 'A ka inventar të softuerit të autorizuar, dhe a kontrollohet e monitorohet instalimi i softuerit të paautorizuar ose shadow-IT?'
+            },
+            goodPractice: {
+              en: [
+                'A maintained inventory of authorised software for each device class or role, used as the baseline for detecting non-compliant installations',
+                'Technical controls (application whitelisting, endpoint management policy, or MDM) to prevent or alert on unauthorised software installation',
+                'A defined approval process for staff requesting new software — covering security review, licensing, and compatibility checks',
+                'Regular scanning or reconciliation of installed software against the authorised inventory to identify and remediate shadow-IT',
+                'Staff aware that installing unapproved software is a policy violation, communicated via acceptable use policy'
+              ],
+              sq: [
+                'Inventar i mirëmbajtur i softuerit të autorizuar për çdo klasë pajisje ose rol, i përdorur si bazë për zbulimin e instalimeve jo-konforme',
+                'Kontrolle teknike (whitelisting aplikacionesh, politikë menaxhimi pikash fundore ose MDM) për të parandaluar ose alarmuar instalimin e softuerit të paautorizuar',
+                'Proces i përcaktuar miratimi për stafin që kërkon softuer të ri — që mbulon rishikimin e sigurisë, licencimin dhe kontrollet e përputhshmërisë',
+                'Skanim ose pajtim i rregullt i softuerit të instaluar me inventarin e autorizuar për të identifikuar dhe korrigjuar shadow-IT',
+                'Stafi i ndërgjegjshëm se instalimi i softuerit të pamilëfshëm është shkelje e politikës, komunikuar nëpërmjet politikës së përdorimit të pranueshëm'
+              ]
+            },
+            followUp: {
+              en: 'Has a scan of installed software been performed recently — were any unauthorised applications found, and if so, how were they handled?',
+              sq: 'A është kryer kohët e fundit një skanim i softuerit të instaluar — a u gjetën ndonjë aplikacion i paautorizuar, dhe nëse po, si u trajtuan?'
+            },
+            references: { iso27001: 'A.5.9', iso27002: '5.9 Inventory of information and other associated assets', nis2: 'Art. 21(2)(i)', cis: 'CIS 2.1, CIS 2.5' }
           }
         ]
       },
@@ -1293,6 +1569,60 @@
               sq: 'Nëse ndodh sot një incident i rëndë, a ka organizata kapacitetin e brendshëm ose të kontraktuar për të ruajtur dhe analizuar dëshminë dixhitale?'
             },
             references: { iso27001: 'A.5.28, A.8.15', iso27002: '5.28 Collection of evidence; 8.15 Logging', nis2: 'Art. 21(2)(b); Art. 23', cis: 'CIS 8.10' }
+          },
+          {
+            id: 'Q50', kind: 'new', threatIndicator: 4, weight: 1.2, critical: true,
+            text: {
+              en: 'Are critical systems and services built with redundancy and high availability — using HA pairs, failover, or load balancing — to minimise the impact of component failures? (Distinct from process-level BCP/DR — see business continuity question.)',
+              sq: 'A janë sistemet dhe shërbimet kritike ndërtuar me tepricë dhe disponueshmëri të lartë — duke përdorur çifte HA, dështim-kalim ose balancim ngarkese — për të minimizuar ndikimin e dështimeve të komponentëve? (I dallueshëm nga BCP/DR në nivel procesi — shihni pyetjen mbi vazhdimësinë e biznesit.)'
+            },
+            goodPractice: {
+              en: [
+                'Critical services (e.g. authentication, email, core business applications, network connectivity) deployed with HA architecture — active-active or active-passive — with documented failover procedures',
+                'RTO and RPO targets defined per critical system and validated through periodic failover testing',
+                'Load balancing used to distribute traffic and prevent single points of failure for user-facing services',
+                'Redundant network links and power feeds for critical infrastructure, aligned with the UPS and power continuity controls',
+                'HA and failover mechanisms tested on a scheduled basis, not only assumed operational'
+              ],
+              sq: [
+                'Shërbime kritike (p.sh. autentikimi, email, aplikacionet kryesore të biznesit, lidhja e rrjetit) të vendosura me arkitekturë HA — aktiv-aktiv ose aktiv-pasiv — me procedura dështim-kalimi të dokumentuara',
+                'Objektivat RTO dhe RPO të përcaktuara për çdo sistem kritik dhe të validuara nëpërmjet testimit periodik të dështim-kalimit',
+                'Balancimi i ngarkesës i përdorur për të shpërndarë trafikun dhe parandaluar pikat e vetme të dështimit për shërbimet e drejtpërdrejta ndaj përdoruesit',
+                'Lidhje redundante rrjeti dhe furnizim me energji për infrastrukturën kritike, të harmonizuara me kontrollet e UPS dhe vazhdimësisë së energjisë',
+                'Mekanizmat HA dhe dështim-kalimi testuar sipas orarit të planifikuar, jo vetëm të supozuara operacionale'
+              ]
+            },
+            followUp: {
+              en: 'When were HA and failover mechanisms last tested for critical systems — was the failover seamless, and were any gaps identified?',
+              sq: 'Kur u testuan për herë të fundit mekanizmat HA dhe dështim-kalimit për sistemet kritike — a ishte dështim-kalimi i pandërprerë, dhe a u identifikuan boshllëqe?'
+            },
+            references: { iso27001: 'A.8.14', iso27002: '8.14 Redundancy of information processing facilities', nis2: 'Art. 21(2)(c)', cis: 'CIS 11' }
+          },
+          {
+            id: 'Q57', kind: 'new', threatIndicator: 2, weight: 1.0, critical: false,
+            text: {
+              en: 'Does the organisation proactively maintain relationships with relevant authorities, national CSIRTs, and sector information-sharing groups ahead of incidents?',
+              sq: 'A mban organizata proaktivisht marrëdhënie me autoritetet përkatëse, CSIRT kombëtare dhe grupet sektoriale të ndarjes së informacionit para incidenteve?'
+            },
+            goodPractice: {
+              en: [
+                'Up-to-date contact details held for the national CSIRT, the relevant data protection authority, and sector-specific regulators',
+                'Membership or registration with relevant sector information-sharing groups (ISACs) or national early-warning platforms where available',
+                'Defined internal owner responsible for maintaining authority relationships and receiving threat advisories from official channels',
+                'Staff are aware of reporting channels and escalation contacts before an incident occurs — not discovering them for the first time during a crisis'
+              ],
+              sq: [
+                'Detajet e kontaktit të përditësuara të mbajtura për CSIRT kombëtar, autoritetin përkatës të mbrojtjes së të dhënave dhe rregullatorë sektorialë specifikë',
+                'Anëtarësim ose regjistrim në grupe sektoriale të ndarjes së informacionit (ISAC) ose platforma kombëtare të paralajmërimit të hershëm ku janë disponibël',
+                'Pronar i brendshëm i përcaktuar përgjegjës për mirëmbajtjen e marrëdhënieve me autoritetet dhe marrjen e këshillave të kërcënimit nga kanalet zyrtare',
+                'Stafi është i ndërgjegjshëm mbi kanalet e raportimit dhe kontaktet e eskalimit para se të ndodhë një incident — duke mos i zbuluar ato për herë të parë gjatë një krize'
+              ]
+            },
+            followUp: {
+              en: 'Has the organisation registered with the national CSIRT or sector ISAC, and when did it last receive or act on a threat advisory from an official authority channel?',
+              sq: 'A është regjistruar organizata me CSIRT kombëtar ose ISAC sektorial, dhe kur mori ose veproi për herë të fundit mbi një këshillë kërcënimi nga një kanal autoritetesh zyrtar?'
+            },
+            references: { iso27001: 'A.5.5, A.5.6', iso27002: '5.5 Contact with authorities; 5.6 Contact with special interest groups', nis2: 'Art. 21(2)(b); Art. 23', cis: 'CIS 17' }
           }
         ]
       }
