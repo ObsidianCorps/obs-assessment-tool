@@ -30,17 +30,6 @@
     }, 200);
   }
 
-  function getPathValue(obj, path) {
-    var parts = path.split('.');
-    var cur = obj;
-    for (var i = 0; i < parts.length; i++) {
-      if (cur == null) return undefined;
-      var p = parts[i];
-      cur = /^\d+$/.test(p) ? cur[parseInt(p, 10)] : cur[p];
-    }
-    return cur;
-  }
-
   function setPathValue(obj, path, value) {
     var parts = path.split('.');
     var cur = obj;
@@ -134,7 +123,10 @@
       _listenersSet = false;
     }
 
-    buildUI(panel);
+    // Use rerender() (not bare buildUI) so revisiting the editor tab preserves
+    // which domain/question accordions were open. On first render the captured
+    // state is empty, so this behaves like a plain build.
+    rerender();
 
     if (!_listenersSet) {
       panel.addEventListener('input', onFieldChange);
@@ -693,6 +685,9 @@
     // Delete question
     summary.appendChild(makeBtn('Delete', 'editor-icon-btn editor-icon-btn--danger', function (e) {
       e.stopPropagation();
+      var q = wc.domains[di].questions[qi];
+      var label = (q && q.id) || ((q && q.text && q.text.en) || 'this question');
+      if (!confirm('Delete question "' + label + '"?')) return;
       var states = captureOpenStates();
       wc.domains[di].questions.splice(qi, 1);
       rerender(states);
