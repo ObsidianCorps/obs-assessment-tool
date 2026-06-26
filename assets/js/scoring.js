@@ -25,8 +25,11 @@
   function effectiveQuestions(domain, assessment) {
     var list = domain.questions.map(function (q) { return { q: q, ans: (assessment.answers || {})[q.id] }; });
     var customs = (assessment.customQuestions || {})[domain.id] || [];
-    customs.forEach(function (c) {
-      if (c && (c.text || c.status)) list.push({ q: { weight: 1, threatIndicator: 3 }, ans: c });
+    customs.forEach(function (c, i) {
+      if (c && (c.text || c.status)) list.push({
+        q: { id: 'custom-' + domain.id + '-' + i, kind: 'custom', weight: 1, threatIndicator: 3, critical: false, text: c.text, references: c.references },
+        ans: c
+      });
     });
     return list;
   }
@@ -77,8 +80,8 @@
   function complianceSummary(template, assessment) {
     var s = { compliant: 0, partial: 0, nonCompliant: 0, na: 0, unanswered: 0, criticalGaps: [] };
     template.domains.forEach(function (d) {
-      d.questions.forEach(function (q) {
-        var ans = (assessment.answers || {})[q.id];
+      effectiveQuestions(d, assessment).forEach(function (it) {
+        var q = it.q, ans = it.ans;
         var st = (ans && ans.status) || 'unanswered';
         if (st === 'compliant') s.compliant++;
         else if (st === 'partial') s.partial++;
@@ -96,8 +99,8 @@
   function recommendations(template, assessment) {
     var out = [];
     template.domains.forEach(function (d) {
-      d.questions.forEach(function (q) {
-        var ans = (assessment.answers || {})[q.id];
+      effectiveQuestions(d, assessment).forEach(function (it) {
+        var q = it.q, ans = it.ans;
         var st = ans && ans.status;
         if (st === 'partial' || st === 'non-compliant') {
           out.push({

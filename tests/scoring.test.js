@@ -67,3 +67,42 @@ test('recommendations sort by threat desc', function () {
   assert.strictEqual(recs.length, 2);
   assert.strictEqual(recs[0].qid, 'Q1'); // threat 4 before threat 2
 });
+
+test('overallScore aggregates across domains', function () {
+  // Q1: compliant v=1 w=1*4=4; Q2: non-compliant v=0 w=1*2=2
+  // overall = 4/6 * 100 = 66.667
+  const a = { answers: { Q1: { status: 'compliant' }, Q2: { status: 'non-compliant' } }, customQuestions: {} };
+  const s = scoring.overallScore(template, a);
+  assert.ok(Math.abs(s - 66.667) < 0.01);
+});
+
+test('domainScore clamps partialPercent above 100', function () {
+  // Q1 partial 150% → clamp01(1.5)=1, w=4; Q2 na → excluded
+  // score = (1*4)/4 * 100 = 100 (not 150)
+  const a = { answers: { Q1: { status: 'partial', partialPercent: 150 }, Q2: { status: 'na' } }, customQuestions: {} };
+  const r = scoring.domainScore(template.domains[0], a);
+  assert.strictEqual(r.score, 100);
+});
+
+test('recommendations includes custom questions', function () {
+  const a = {
+    answers: { Q1: { status: 'compliant' }, Q2: { status: 'compliant' } },
+    customQuestions: { d1: [{ text: 'Custom?', references: 'A.1', status: 'non-compliant' }] }
+  };
+  const recs = scoring.recommendations(template, a);
+  assert.strictEqual(recs.length, 1);
+  assert.strictEqual(recs[0].qid, 'custom-d1-0');
+  assert.strictEqual(recs[0].domainId, 'd1');
+  assert.strictEqual(recs[0].status, 'non-compliant');
+  assert.strictEqual(recs[0].text, 'Custom?');
+});
+
+test('complianceSummary counts custom questions', function () {
+  const a = {
+    answers: { Q1: { status: 'compliant' }, Q2: { status: 'compliant' } },
+    customQuestions: { d1: [{ text: 'Custom?', references: 'A.1', status: 'non-compliant' }] }
+  };
+  const s = scoring.complianceSummary(template, a);
+  assert.strictEqual(s.compliant, 2);
+  assert.strictEqual(s.nonCompliant, 1); // custom question counted
+});
