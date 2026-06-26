@@ -3,6 +3,14 @@
 
   window.OBS_CHANGELOG = [
     {
+      version: '1.3.0',
+      date: '2026-06-26',
+      changes: [
+        'Assessment expanded to 58 questions — broader ISO/IEC 27001:2022 Annex A coverage: change management, secure protocols (TLS), web filtering, high availability, threat intelligence, secure acquisition, software inventory, environmental controls, project security, secured communications, authority liaison, and intrusion detection',
+        'Encryption setup is now available directly from the header toolbar'
+      ]
+    },
+    {
       version: '1.2.0',
       date: '2026-06-26',
       changes: [
