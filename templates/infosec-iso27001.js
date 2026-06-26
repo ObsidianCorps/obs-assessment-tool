@@ -129,7 +129,7 @@
                 'Ndërgjegjësim mbi detyrimet GDPR ndër stafin përkatës',
                 'Një Regjistër i Aktiviteteve të Përpunimit (ROPA, GDPR Neni 30) për çdo kategori të dhënash personale të përpunuara',
                 'Një bazë ligjore e identifikuar për çdo aktivitet përpunimi',
-                'Pëlqim i shprehur dhe i dokumentuar për kapturimin dhe publikimin e imazheve të individëve të identifikueshëm'
+                'Pëlqim i shprehur dhe i dokumentuar për regjistrimin dhe publikimin e imazheve të individëve të identifikueshëm'
               ]
             },
             followUp: {
@@ -204,7 +204,7 @@
             id: 'Q5', kind: 'standard', threatIndicator: 4, weight: 1.2, critical: true,
             text: {
               en: 'Do staff receive regular, role-appropriate security awareness training, and does this extend to management?',
-              sq: 'A marrin stafi trajnim të rregullt, të përshtatur me rolin, mbi ndërgjegjësimin e sigurisë, dhe a shtrihet ky gjithashtu tek menaxhmenti?'
+              sq: 'A merr stafi trajnim të rregullt, të përshtatur me rolin, mbi ndërgjegjësimin e sigurisë, dhe a shtrihet ky gjithashtu tek menaxhmenti?'
             },
             goodPractice: {
               en: [
@@ -215,7 +215,7 @@
               ],
               sq: [
                 'Një program i përsëritur (të paktën vjetor) i ndërgjegjësimit të sigurisë që mbulon phishing, inxhinierinë sociale dhe raportimin e incidenteve',
-                'Regjistrat e trajnimeve të mbajtura për çdo punonjës',
+                'Regjistrime trajnimi të mbajtura për çdo punonjës',
                 'Anëtarët e organit drejtues gjithashtu marrin trajnim mbi sigurinë kibernetike (një pritje specifike e qeverisjes NIS2)',
                 'Ushtrime të simuluara phishing ose të ngjashme, kur është proporcional'
               ]
@@ -403,7 +403,7 @@
                 'SLA-të në vend për ofruesit reaktiviteti i të cilëve ndikon vazhdimësinë e biznesit',
                 'Kërkesat e sigurisë të integruara në kontratat e furnitorëve (jo vetëm kushtet e dorëzimit/performancës)',
                 'Rishikim periodik i kontratave dhe performancës së furnitorëve ndaj kushteve të rëna dakord',
-                'Konsideratë e praktikave të sigurisë së furnitorëve dhe procedurave të zhvillimit të sigurt (NIS2 Neni 21(3))'
+                'Vlerësim i praktikave të sigurisë së furnitorëve dhe procedurave të zhvillimit të sigurt (NIS2 Neni 21(3))'
               ]
             },
             followUp: {
@@ -470,7 +470,7 @@
             id: 'Q34', kind: 'new', threatIndicator: 4, weight: 1.2, critical: true,
             text: {
               en: 'Is supplier risk assessed before onboarding, and is there a current list of critical/high-risk suppliers?',
-              sq: 'A vlerësohet risku i furnitorit para anëtarësimit, dhe a ekziston një listë aktuale e furnitorëve kritikë/me risk të lartë?'
+              sq: 'A vlerësohet risku i furnitorit para pranimit, dhe a ekziston një listë aktuale e furnitorëve kritikë/me risk të lartë?'
             },
             goodPractice: {
               en: [
@@ -481,7 +481,7 @@
               sq: [
                 'Një proces i dokumentuar për vlerësimin e qëndrimit të sigurisë të furnitorëve të rinj para dhënies së aksesit në sisteme ose të dhëna',
                 'Kritere që dallojnë furnitorët kritikë/me risk të lartë (p.sh. ofruesit cloud, ICT/MSP, pagat) nga ata me risk të ulët',
-                'Dëshmi e kërkuar nga furnitorët proporcionale ndaj riskut (p.sh. çertifikime, pyetësorë sigurie, të drejta auditimi)'
+                'Dëshmi e kërkuar nga furnitorët proporcionale ndaj riskut (p.sh. certifikime, pyetësorë sigurie, të drejta auditimi)'
               ]
             },
             followUp: {
@@ -650,7 +650,7 @@
               ],
               sq: [
                 'MFA i zbatuar, veçanërisht për aksesin në distancë, emailin, llogari admin dhe cloud (pritje e shprehur e NIS2)',
-                'Rregulla të dokumentuara për ndërtimin e fjalëkalimit (gjatësia/kompleksiteti, ose udhëzime për frazë-kalim)',
+                'Rregulla të dokumentuara për krijimin e fjalëkalimit (gjatësia/kompleksiteti, ose udhëzime për frazë-kalim)',
                 'Udhëzime praktike për përdoruesit për të ndërtuar fjalëkalime/fraza-kalim të paharrueshme por të forta',
                 'Fjalëkalimet trajtohen si rreptësisht personale dhe nuk ndahen kurrë',
                 'Kredencialet rrotullohen bazuar në risk (udhëzimet moderne favorizojnë rrotullimin në kompromis/risk dhe jo vetëm në intervale fikse kohore, të kombinuara me MFA dhe monitorim)'
@@ -679,7 +679,7 @@
                 'Të drejtat admin jepen vetëm kur është rreptësisht e nevojshme, të ndara nga llogaria standarde e secilit përdorues',
                 'Një listë aktuale e atyre që kanë akses të privilegjuar, e rishikuar periodikisht',
                 'Aktiviteti i llogarisë së privilegjuar regjistrohet dhe monitorohet për anomali',
-                'Kredencialet admin të paracaktuara/furnitorit ndryshojnë para vënies në punë'
+                'Kredencialet admin të paracaktuara/furnitorit ndryshohen para vënies në punë'
               ]
             },
             followUp: {
@@ -819,7 +819,7 @@
               ],
               sq: [
                 'Një proces për gjurmimin e dobësive të zbuluar rishtazi të rëndësishme për sistemet e organizatës',
-                'Skanim i rregullt i dobësive të aktiveve të brendshme dhe atyre të hapura ndaj jashtë',
+                'Skanim i rregullt i dobësive të aktiveve të brendshme dhe atyre të hapura ndaj jashtëm',
                 'Prioritizim i bazuar në risk dhe afate korrektuese të synuara (p.sh. më i shpejtë për sistemet e hapura ndaj internetit/kritike)',
                 'Një proces i përcaktuar për trajtimin e dobësive të raportuara nga palët e treta (zbulim i koordinuar)'
               ]
@@ -862,7 +862,7 @@
             id: 'Q41', kind: 'new', threatIndicator: 4, weight: 1.2, critical: true,
             text: {
               en: 'Are email security controls in place, including sender authentication (SPF, DKIM, DMARC) and anti-phishing / anti-spam filtering?',
-              sq: 'A janë kontrolleve të sigurisë së emailit në vend, duke përfshirë autentikimin e dërguesit (SPF, DKIM, DMARC) dhe filtrimin anti-phishing / anti-spam?'
+              sq: 'A janë kontrollet e sigurisë së emailit në vend, duke përfshirë autentikimin e dërguesit (SPF, DKIM, DMARC) dhe filtrimin anti-phishing / anti-spam?'
             },
             goodPractice: {
               en: [
@@ -913,7 +913,7 @@
                 'Sistemi operativ dhe softueri mbahen të përditësuar me përditësimet e sigurisë',
                 'Të drejtat admin lokale të kufizuara, jo të dhëna si parazgjedhje për përdoruesit standardë',
                 'Politikë e dokumentuar e përdorimit të pranueshëm për pajisjet IT',
-                'Stacionet e punës bllokohen automatikisht pas një periudhe të shkurtër mosaktiviteti, dhe përdoruesit blokohen manualisht kur largohen'
+                'Stacionet e punës bllokohen automatikisht pas një periudhe të shkurtër mosaktiviteti, dhe përdoruesit i bllokojnë manualisht kur largohen'
               ]
             },
             followUp: {
@@ -989,7 +989,7 @@
                 'Shtrirja e rezervave mbulon të gjitha të dhënat e rëndësishme për biznesin (duke përjashtuar skedarët plotësisht privatë)',
                 'Një frekuencë e rezervave e përcaktuar që përputhet me tolerancën e biznesit ndaj humbjes së të dhënave (RPO)',
                 'Një periudhë mbajtjeje e përcaktuar që përputhet me tolerancën e biznesit sa larg duhet arritur rimëkëmbja',
-                'Rezervat shkëputur/izoluara nga rrjeti i prodhimit pas përfundimit (mbrojtje nga përhapja e ransomware)',
+                'Rezervat shkëputen dhe izolohen nga rrjeti i prodhimit pas përfundimit (mbrojtje nga përhapja e ransomware)',
                 'Të paktën një kopje e ruajtur jashtë selisë ose në një mjedis të ndarë, në një distancë/izolim kuptimplotë nga siti primar',
                 'Rimëkëmbja testohet periodikisht — një rezervë që nuk është rimëkëmbur kurrë nuk është rezervë e verifikuar'
               ]
@@ -1039,7 +1039,7 @@
               ],
               sq: [
                 'Politikë e dokumentuar BYOD që përcakton çfarë lejohet (p.sh. vetëm akses email vs. akses i plotë të dhënash)',
-                'Bazë minimale sigurie e kërkuar për pajisjet personale (p.sh. bllokim ekrani, kriptim, valuta e sistemit operativ)',
+                'Bazë minimale sigurie e kërkuar për pajisjet personale (p.sh. bllokim ekrani, kriptim, sistem operativ i përditësuar)',
                 'Inventar i pajisjeve personale të autorizuara që lidhen me burimet e kompanisë',
                 'Një proces për revokim të aksesit të të dhënave të kompanisë nga pajisja personale kur një punonjës largohet'
               ]
@@ -1054,7 +1054,7 @@
             id: 'Q29', kind: 'standard', threatIndicator: 4, weight: 1, critical: true,
             text: {
               en: 'Is there a policy governing cryptography/encryption, and is it applied when sending confidential data by email?',
-              sq: 'A ka një politikë që qeveriset kriptografia/enkriptimi, dhe a zbatohet kur dërgohen të dhëna konfidenciale me email?'
+              sq: 'A ekziston një politikë qeverisëse e kriptografisë/enkriptimit, dhe a zbatohet ajo kur dërgohen të dhëna konfidenciale me email?'
             },
             goodPractice: {
               en: [
@@ -1156,7 +1156,7 @@
             id: 'Q43', kind: 'new', threatIndicator: 3, weight: 1, critical: false,
             text: {
               en: 'Are data leakage prevention (DLP) controls in place to restrict the unauthorised transfer of sensitive data outside approved channels?',
-              sq: 'A janë kontrolleve të parandalimit të rrjedhjes së të dhënave (DLP) në vend për të kufizuar transferimin e paautorizuar të të dhënave të ndjeshme jashtë kanaleve të aprovuara?'
+              sq: 'A janë kontrollet e parandalimit të rrjedhjes së të dhënave (DLP) në vend për të kufizuar transferimin e paautorizuar të të dhënave të ndjeshme jashtë kanaleve të miratuara?'
             },
             goodPractice: {
               en: [
@@ -1270,7 +1270,7 @@
             id: 'Q45', kind: 'new', threatIndicator: 4, weight: 1.2, critical: true,
             text: {
               en: 'Are digital evidence and logs preserved and collected in a manner that supports incident investigation and, where necessary, legal or regulatory proceedings?',
-              sq: 'A ruhet dhe mblidhet dëshmia dixhitale dhe regjistrat në një mënyrë që mbështet hetimin e incidenteve dhe, kur është e nevojshme, procedurat ligjore ose rregullatore?'
+              sq: 'A ruhen dhe mblidhen dëshmitë dixhitale dhe regjistrat në një mënyrë që mbështet hetimin e incidenteve dhe, kur është e nevojshme, procedurat ligjore ose rregullatore?'
             },
             goodPractice: {
               en: [
@@ -1285,7 +1285,7 @@
                 'Procedurë e përcaktuar e mbledhjes së dëshmive dhe zinxhirit të kujdestarisë, e kuptuar nga ekipi i reagimit ndaj incidenteve',
                 'Të dhënat e paqëndrueshme (procese aktive, gjendja e memorjes) ruhen para se të fiket ose riinstalohet një sistem i kompromentuar',
                 'Kopje forensike të mediave të prekura merren para korrigjimit ku është proporcional dhe i realizueshëm',
-                'Organizata di cilët palë të jashtme (këshilltar ligjor, zbatim i ligjit, ofrues forensik) të angazhojë kur dëshmia kërkon trajtim profesional'
+                'Organizata di cilat palë të jashtme (këshilltar ligjor, zbatim i ligjit, ofrues forensik) të angazhojë kur dëshmia kërkon trajtim profesional'
               ]
             },
             followUp: {

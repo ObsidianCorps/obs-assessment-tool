@@ -132,9 +132,9 @@
 
     // ── Draft banner ─────────────────────────────────────────────────
     'draft.bannerWithName':   { en: 'A saved draft for “{name}” was found. Resume where you left off, or start fresh.',
-                                sq: 'Një draft i ruajtur për “{name}” u gjet. Vazhdoni nga ku u ndatë, ose filloni nga e para.' },
+                                sq: 'Një draft i ruajtur për “{name}” u gjet. Vazhdoni nga ku e latë, ose filloni nga e para.' },
     'draft.bannerNoName':     { en: 'A saved draft was found. Resume where you left off, or start fresh.',
-                                sq: 'Një draft i ruajtur u gjet. Vazhdoni nga ku u ndatë, ose filloni nga e para.' },
+                                sq: 'Një draft i ruajtur u gjet. Vazhdoni nga ku e latë, ose filloni nga e para.' },
 
     // ── Dashboard chrome ────────────────────────────────────────────
     'dash.overview':          { en: 'Security Assessment Overview', sq: 'Pasqyrë e Vlerësimit të Sigurisë' },
