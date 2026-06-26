@@ -1,0 +1,12 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.obs-assessment.rule=Host(`assessment.obsidiancorps.com`)"
+      - "traefik.http.routers.obs-assessment.entrypoints=websecure"
+      - "traefik.http.routers.obs-assessment.tls.certresolver=letsencrypt"
+      - "traefik.http.services.obs-assessment.loadbalancer.server.port=80"
