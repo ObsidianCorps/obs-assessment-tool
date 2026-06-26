@@ -65,6 +65,9 @@
     },
     ossGitHub: { en: 'View on GitHub', sq: 'Shiko në GitHub' },
 
+    changelogLabel: { en: 'Releases',    sq: 'Versione' },
+    changelogTitle: { en: "What's new",  sq: 'Çfarë ka të re' },
+
     footerRepo:      { en: 'obs-assessment-tool', sq: 'obs-assessment-tool' },
     footerMit:       { en: 'Free & open source (MIT)', sq: 'Falas dhe me burim të hapur (MIT)' },
     footerCopyright: { en: '©', sq: '©' },
@@ -119,6 +122,48 @@
     if (yearEl) yearEl.textContent = new Date().getFullYear();
   }
 
+  /* ── Changelog renderer ──────────────────────────────────────── */
+  function renderChangelog() {
+    var container = document.getElementById('changelog-list');
+    if (!container || !window.OBS_CHANGELOG) { return; }
+
+    for (var i = 0; i < window.OBS_CHANGELOG.length; i++) {
+      var entry = window.OBS_CHANGELOG[i];
+
+      var article = document.createElement('div');
+      article.className = 'changelog-release';
+
+      /* Header: version badge + date */
+      var header = document.createElement('div');
+      header.className = 'changelog-release__header';
+
+      var versionEl = document.createElement('span');
+      versionEl.className = 'changelog-release__version';
+      versionEl.textContent = 'v' + entry.version;
+
+      var dateEl = document.createElement('span');
+      dateEl.className = 'changelog-release__date';
+      dateEl.textContent = entry.date;
+
+      header.appendChild(versionEl);
+      header.appendChild(dateEl);
+      article.appendChild(header);
+
+      /* Changes list */
+      var ul = document.createElement('ul');
+      ul.className = 'changelog-release__changes';
+
+      for (var j = 0; j < entry.changes.length; j++) {
+        var li = document.createElement('li');
+        li.textContent = entry.changes[j];
+        ul.appendChild(li);
+      }
+
+      article.appendChild(ul);
+      container.appendChild(article);
+    }
+  }
+
   /* ── Bootstrap ───────────────────────────────────────────────── */
   function init() {
     /* Determine starting language: stored preference → browser hint → 'en' */
@@ -129,6 +174,7 @@
              : (supported[browserHint] ? browserHint : 'en');
 
     applyLang(lang);
+    renderChangelog();
 
     /* Wire up toggle buttons */
     var btns = document.querySelectorAll('[data-lang]');
