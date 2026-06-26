@@ -98,16 +98,25 @@
     bar.appendChild(inner);
     document.body.appendChild(bar);
 
-    // Re-translate live if the user flips the language toggle while the banner is open.
-    var langBtns = document.querySelectorAll('[data-lang]');
-    for (var i = 0; i < langBtns.length; i++) {
-      langBtns[i].addEventListener('click', function () {
-        var l = currentLang();
-        msg.textContent = pick(STRINGS.message, l);
-        link.textContent = pick(STRINGS.privacy, l);
-        btn.textContent = pick(STRINGS.dismiss, l);
-      });
-    }
+    // Re-translate live if the user flips the language toggle while the banner is
+    // open. Use a delegated listener on document so it works even though the app
+    // builds the [data-lang] toggle buttons AFTER this script runs. Defer with
+    // setTimeout(0) so the app's handler updates documentElement.lang first.
+    document.addEventListener('click', function (e) {
+      var el = e.target;
+      while (el && el.getAttribute) {
+        if (el.getAttribute('data-lang')) {
+          setTimeout(function () {
+            var l = currentLang();
+            msg.textContent = pick(STRINGS.message, l);
+            link.textContent = pick(STRINGS.privacy, l);
+            btn.textContent = pick(STRINGS.dismiss, l);
+          }, 0);
+          return;
+        }
+        el = el.parentNode;
+      }
+    });
   }
 
   if (document.readyState === 'loading') {
