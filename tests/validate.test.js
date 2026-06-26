@@ -51,3 +51,10 @@ test('maturityLevels item missing min fails', function () {
   delete t.maturityLevels[0].min;
   assert.strictEqual(validate.validateTemplate(t).ok, false);
 });
+test('template title missing language fails', function () {
+  const t = goodTemplate();
+  delete t.title.sq;
+  const r = validate.validateTemplate(t);
+  assert.strictEqual(r.ok, false);
+  assert.ok(r.errors.some((e) => e.indexOf('title') >= 0), 'expected an error mentioning title');
+});

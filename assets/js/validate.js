@@ -28,6 +28,7 @@
         if (typeof ml.max !== 'number') errors.push('maturityLevels[' + i + '].max must be numeric');
       });
     }
+    hasAllLangs(t.title, langs, 'template title', errors);
     if (!Array.isArray(t.domains) || !t.domains.length) errors.push('domains required');
     var seen = {};
     (t.domains || []).forEach(function (d, di) {
