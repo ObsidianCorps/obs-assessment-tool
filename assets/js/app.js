@@ -43,6 +43,15 @@
 
   /* ── Language toggle ─────────────────────────────────────── */
 
+  /* Apply translated strings to all [data-i18n] elements in the DOM */
+  function applyChrome(lang) {
+    if (!OBS.ui || typeof OBS.ui.t !== 'function') return;
+    var els = document.querySelectorAll('[data-i18n]');
+    for (var i = 0; i < els.length; i++) {
+      els[i].textContent = OBS.ui.t(els[i].getAttribute('data-i18n'), lang);
+    }
+  }
+
   function setLang(lang) {
     app.lang = lang;
     document.documentElement.lang = lang;
@@ -66,6 +75,9 @@
       app.assessment.language = lang;
       autosave();
     }
+
+    // Translate all static chrome elements to the new language
+    applyChrome(lang);
 
     render();
   }
@@ -362,7 +374,7 @@
     if (q.critical) {
       var crit = document.createElement('span');
       crit.className = 'question-card__critical';
-      crit.textContent = 'Critical';
+      crit.textContent = OBS.ui.t('q.critical', app.lang);
       meta.appendChild(crit);
     }
     card.appendChild(meta);
@@ -378,7 +390,7 @@
       details.className = 'good-practice';
       var summary = document.createElement('summary');
       summary.className = 'good-practice__summary';
-      summary.textContent = 'What good practice looks like';
+      summary.textContent = OBS.ui.t('q.goodPractice', app.lang);
       details.appendChild(summary);
       var gpUl = document.createElement('ul');
       gpUl.className = 'good-practice__list';
@@ -396,7 +408,7 @@
       var fuEl = document.createElement('p');
       fuEl.className = 'question-card__followup';
       var fuStrong = document.createElement('strong');
-      fuStrong.textContent = 'Follow-up: ';
+      fuStrong.textContent = OBS.ui.t('q.followUp', app.lang);
       fuEl.appendChild(fuStrong);
       fuEl.appendChild(document.createTextNode(fu));
       card.appendChild(fuEl);
@@ -411,7 +423,7 @@
     if (status !== 'partial') ppGrp.setAttribute('hidden', '');
     var ppLbl = document.createElement('label');
     ppLbl.setAttribute('for', qid + '-pp');
-    ppLbl.textContent = 'Partial compliance (%)';
+    ppLbl.textContent = OBS.ui.t('q.partialPct', app.lang);
     ppGrp.appendChild(ppLbl);
     var ppInp = document.createElement('input');
     ppInp.type = 'number'; ppInp.min = '0'; ppInp.max = '100';
@@ -427,7 +439,7 @@
     if (status !== 'na') naGrp.setAttribute('hidden', '');
     var naLbl = document.createElement('label');
     naLbl.setAttribute('for', qid + '-na');
-    naLbl.textContent = 'Reason for N/A';
+    naLbl.textContent = OBS.ui.t('q.naReason', app.lang);
     naGrp.appendChild(naLbl);
     var naInp = document.createElement('input');
     naInp.type = 'text';
@@ -442,7 +454,7 @@
     evGrp.className = 'form-group';
     var evLbl = document.createElement('label');
     evLbl.setAttribute('for', qid + '-ev');
-    evLbl.textContent = 'Evidence / notes';
+    evLbl.textContent = OBS.ui.t('q.evidence', app.lang);
     evGrp.appendChild(evLbl);
     var evTa = document.createElement('textarea');
     evTa.id = qid + '-ev';
@@ -468,17 +480,17 @@
     meta.className = 'question-card__meta';
     var custBadge = document.createElement('span');
     custBadge.className = 'question-card__id';
-    custBadge.textContent = 'Custom';
+    custBadge.textContent = OBS.ui.t('cq.badge', app.lang);
     meta.appendChild(custBadge);
     var custLbl = document.createElement('span');
     custLbl.className = 'question-card__custom-label';
-    custLbl.textContent = 'Your question (' + (index + 1) + ')';
+    custLbl.textContent = OBS.ui.t('cq.label', app.lang) + ' (' + (index + 1) + ')';
     meta.appendChild(custLbl);
     // Remove button
     var removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'btn-sm custom-question-remove-btn';
-    removeBtn.textContent = 'Remove';
+    removeBtn.textContent = OBS.ui.t('cq.remove', app.lang);
     (function (did, idx) {
       removeBtn.addEventListener('click', function () {
         if (!app.assessment || !app.assessment.customQuestions) return;
@@ -497,13 +509,13 @@
     textGrp.className = 'form-group';
     var textLbl = document.createElement('label');
     textLbl.setAttribute('for', pfx + '-text');
-    textLbl.textContent = 'Question text';
+    textLbl.textContent = OBS.ui.t('cq.questionText', app.lang);
     textGrp.appendChild(textLbl);
     var textInp = document.createElement('input');
     textInp.type = 'text';
     textInp.id = pfx + '-text';
     textInp.value = customQ.text || '';
-    textInp.placeholder = 'Enter your question…';
+    textInp.placeholder = OBS.ui.t('cq.questionPlaceholder', app.lang);
     textInp.setAttribute('data-custom-domain', domainId);
     textInp.setAttribute('data-custom-idx', String(index));
     textInp.setAttribute('data-field', 'text');
@@ -514,13 +526,13 @@
     refGrp.className = 'form-group';
     var refLbl = document.createElement('label');
     refLbl.setAttribute('for', pfx + '-refs');
-    refLbl.textContent = 'References (optional)';
+    refLbl.textContent = OBS.ui.t('cq.references', app.lang);
     refGrp.appendChild(refLbl);
     var refInp = document.createElement('input');
     refInp.type = 'text';
     refInp.id = pfx + '-refs';
     refInp.value = typeof customQ.references === 'string' ? customQ.references : '';
-    refInp.placeholder = 'e.g. ISO 27001 A.5.1';
+    refInp.placeholder = OBS.ui.t('cq.refPlaceholder', app.lang);
     refInp.setAttribute('data-custom-domain', domainId);
     refInp.setAttribute('data-custom-idx', String(index));
     refInp.setAttribute('data-field', 'references');
@@ -537,7 +549,7 @@
     if (status !== 'partial') ppGrp.setAttribute('hidden', '');
     var ppLbl = document.createElement('label');
     ppLbl.setAttribute('for', pfx + '-pp');
-    ppLbl.textContent = 'Partial compliance (%)';
+    ppLbl.textContent = OBS.ui.t('q.partialPct', app.lang);
     ppGrp.appendChild(ppLbl);
     var ppInp = document.createElement('input');
     ppInp.type = 'number'; ppInp.min = '0'; ppInp.max = '100';
@@ -554,7 +566,7 @@
     if (status !== 'na') naGrp.setAttribute('hidden', '');
     var naLbl = document.createElement('label');
     naLbl.setAttribute('for', pfx + '-na');
-    naLbl.textContent = 'Reason for N/A';
+    naLbl.textContent = OBS.ui.t('q.naReason', app.lang);
     naGrp.appendChild(naLbl);
     var naInp = document.createElement('input');
     naInp.type = 'text';
@@ -570,7 +582,7 @@
     evGrp.className = 'form-group';
     var evLbl = document.createElement('label');
     evLbl.setAttribute('for', pfx + '-ev');
-    evLbl.textContent = 'Evidence / notes';
+    evLbl.textContent = OBS.ui.t('q.evidence', app.lang);
     evGrp.appendChild(evLbl);
     var evTa = document.createElement('textarea');
     evTa.id = pfx + '-ev';
@@ -590,15 +602,15 @@
     var fieldset = document.createElement('fieldset');
     fieldset.className = 'status-fieldset';
     var legend = document.createElement('legend');
-    legend.textContent = 'Status';
+    legend.textContent = OBS.ui.t('q.status', app.lang);
     fieldset.appendChild(legend);
     var div = document.createElement('div');
     div.className = 'status-radios';
     var statuses = [
-      { val: 'compliant', label: 'Compliant' },
-      { val: 'partial', label: 'Partial' },
-      { val: 'non-compliant', label: 'Non-compliant' },
-      { val: 'na', label: 'N/A' }
+      { val: 'compliant',     label: OBS.ui.t('status.compliant', app.lang) },
+      { val: 'partial',       label: OBS.ui.t('status.partial', app.lang) },
+      { val: 'non-compliant', label: OBS.ui.t('status.nonCompliant', app.lang) },
+      { val: 'na',            label: OBS.ui.t('status.na', app.lang) }
     ];
     for (var i = 0; i < statuses.length; i++) {
       var s = statuses[i];
@@ -634,7 +646,7 @@
     section.className = 'remediation-group';
     var heading = document.createElement('p');
     heading.className = 'remediation-group__label';
-    heading.textContent = 'Remediation';
+    heading.textContent = OBS.ui.t('rem.heading', app.lang);
     section.appendChild(heading);
     var row = document.createElement('div');
     row.className = 'remediation-row';
@@ -653,7 +665,7 @@
     ownerGrp.className = 'form-group form-group--inline';
     var ownerLbl = document.createElement('label');
     ownerLbl.setAttribute('for', idPrefix + '-rem-owner');
-    ownerLbl.textContent = 'Owner';
+    ownerLbl.textContent = OBS.ui.t('rem.owner', app.lang);
     ownerGrp.appendChild(ownerLbl);
     var ownerInp = document.createElement('input');
     ownerInp.type = 'text';
@@ -667,7 +679,7 @@
     dateGrp.className = 'form-group form-group--inline';
     var dateLbl = document.createElement('label');
     dateLbl.setAttribute('for', idPrefix + '-rem-date');
-    dateLbl.textContent = 'Target date';
+    dateLbl.textContent = OBS.ui.t('rem.targetDate', app.lang);
     dateGrp.appendChild(dateLbl);
     var dateInp = document.createElement('input');
     dateInp.type = 'date';
@@ -681,16 +693,16 @@
     statusGrp.className = 'form-group form-group--inline';
     var statusLbl = document.createElement('label');
     statusLbl.setAttribute('for', idPrefix + '-rem-status');
-    statusLbl.textContent = 'Status';
+    statusLbl.textContent = OBS.ui.t('rem.status', app.lang);
     statusGrp.appendChild(statusLbl);
     var statusSel = document.createElement('select');
     statusSel.id = idPrefix + '-rem-status';
     setRouting(statusSel, 'rem-status');
     var remOpts = [
-      { val: 'none', label: '— None —' },
-      { val: 'planned', label: 'Planned' },
-      { val: 'in-progress', label: 'In progress' },
-      { val: 'remediated', label: 'Remediated' }
+      { val: 'none',        label: OBS.ui.t('rem.none', app.lang) },
+      { val: 'planned',     label: OBS.ui.t('rem.planned', app.lang) },
+      { val: 'in-progress', label: OBS.ui.t('rem.inProgress', app.lang) },
+      { val: 'remediated',  label: OBS.ui.t('rem.remediated', app.lang) }
     ];
     for (var ri = 0; ri < remOpts.length; ri++) {
       var opt = document.createElement('option');
@@ -731,7 +743,7 @@
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'btn-secondary add-custom-question-btn';
-    btn.textContent = '+ Add your own question';
+    btn.textContent = OBS.ui.t('cq.addButton', app.lang);
     btn.addEventListener('click', function () {
       if (!app.assessment) return;
       if (!app.assessment.customQuestions) app.assessment.customQuestions = {};
@@ -752,13 +764,13 @@
     section.className = 'narrative-section';
     var h3 = document.createElement('h3');
     h3.className = 'narrative-section__title';
-    h3.textContent = 'Assessor findings';
+    h3.textContent = OBS.ui.t('narr.heading', app.lang);
     section.appendChild(h3);
     var narrId = 'narr-' + domainId;
     var lbl = document.createElement('label');
     lbl.setAttribute('for', narrId);
     lbl.className = 'narrative-section__label';
-    lbl.textContent = 'Domain narrative (assessor summary)';
+    lbl.textContent = OBS.ui.t('narr.label', app.lang);
     section.appendChild(lbl);
     var ta = document.createElement('textarea');
     ta.id = narrId;
@@ -920,6 +932,9 @@
   /* ── Init ────────────────────────────────────────────────── */
 
   function init() {
+    // Apply translated chrome on initial load
+    applyChrome(app.lang);
+
     // Footer year
     var yearEl = document.getElementById('footer-year');
     if (yearEl) yearEl.textContent = new Date().getFullYear();
@@ -954,9 +969,9 @@
         var draftText = document.getElementById('draft-banner-text');
         if (draftBanner && draftText) {
           var clientName = draftAssessment.meta && draftAssessment.meta.clientName;
-          draftText.textContent = 'A saved draft' +
-            (clientName ? ' for “' + clientName + '”' : '') +
-            ' was found. Resume where you left off, or start fresh.';
+          draftText.textContent = clientName
+            ? OBS.ui.t('draft.bannerWithName', app.lang).replace('{name}', clientName)
+            : OBS.ui.t('draft.bannerNoName', app.lang);
           draftBanner.hidden = false;
 
           document.getElementById('btn-resume-draft').addEventListener('click', function () {
@@ -1020,7 +1035,7 @@
         var sel = document.getElementById('template-select');
         var templateId = sel ? sel.value : null;
         if (!templateId || !window.OBS_TEMPLATES || !window.OBS_TEMPLATES[templateId]) {
-          alert('Please select a template first.');
+          alert(OBS.ui.t('alert.noTemplate', app.lang));
           return;
         }
         newAssessment(templateId);
@@ -1060,7 +1075,7 @@
     if (btnSave) {
       btnSave.addEventListener('click', function () {
         if (!app.assessment) {
-          alert('No active assessment to save. Click "Begin assessment" first.');
+          alert(OBS.ui.t('alert.noAssessmentSave', app.lang));
           return;
         }
         // Sync meta from form before saving
@@ -1087,15 +1102,15 @@
         reader.onload = function (e) {
           var parsed = OBS.storage.parseAssessment(e.target.result);
           if (!parsed.ok) {
-            alert('Import failed: ' + parsed.error);
+            alert(OBS.ui.t('alert.importFailed', app.lang) + parsed.error);
             return;
           }
           var imported = parsed.assessment;
           var template = window.OBS_TEMPLATES &&
                          window.OBS_TEMPLATES[imported.templateId];
           if (!template) {
-            alert('Import failed: template “' + imported.templateId +
-                  '” is not available in this version of the tool.');
+            alert(OBS.ui.t('alert.importBadTmpl1', app.lang) + imported.templateId +
+                  OBS.ui.t('alert.importBadTmpl2', app.lang));
             return;
           }
           var result = OBS.storage.reconcile(imported, template);
@@ -1114,7 +1129,7 @@
           render();
         };
         reader.onerror = function () {
-          alert('Could not read the selected file. Please try again.');
+          alert(OBS.ui.t('alert.fileReadError', app.lang));
         };
         reader.readAsText(file);
       });
@@ -1124,9 +1139,9 @@
     var btnPdf = document.getElementById('btn-export-pdf');
     if (btnPdf) {
       btnPdf.addEventListener('click', function () {
-        if (!app.assessment) { alert('No active assessment to export.'); return; }
+        if (!app.assessment) { alert(OBS.ui.t('alert.noAssessmentExport', app.lang)); return; }
         if (!(OBS.exporters && typeof OBS.exporters.buildPdf === 'function')) {
-          alert('PDF export is unavailable: the PDF library failed to load.');
+          alert(OBS.ui.t('alert.noPdf', app.lang));
           return;
         }
         var dlg = document.getElementById('pdf-options-dialog');
@@ -1176,7 +1191,7 @@
             var doc = OBS.exporters.buildPdf(app.template, app.assessment, app.lang, imgs, options);
             doc.save(safeFilename(app.assessment.meta.clientName || 'assessment') + '.pdf');
           } catch (e) {
-            alert('Could not generate the PDF: ' + (e && e.message ? e.message : e));
+            alert(OBS.ui.t('alert.pdfError', app.lang) + (e && e.message ? e.message : e));
           }
         });
       }
@@ -1186,9 +1201,9 @@
     var btnCsv = document.getElementById('btn-export-csv');
     if (btnCsv) {
       btnCsv.addEventListener('click', function () {
-        if (!app.assessment) { alert('No active assessment to export.'); return; }
+        if (!app.assessment) { alert(OBS.ui.t('alert.noAssessmentExport', app.lang)); return; }
         if (!(OBS.exporters && typeof OBS.exporters.assessmentToCsv === 'function')) {
-          alert('CSV export is unavailable.');
+          alert(OBS.ui.t('alert.noCsv', app.lang));
           return;
         }
         var csv = OBS.exporters.assessmentToCsv(app.template, app.assessment, app.lang);

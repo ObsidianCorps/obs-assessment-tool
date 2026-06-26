@@ -20,6 +20,13 @@
     return field.en || '';
   }
 
+  /* ── UI chrome string helper (delegates to OBS.ui if present) ────────── */
+  function t(key, lang) {
+    return (root.OBS && root.OBS.ui && typeof root.OBS.ui.t === 'function')
+      ? root.OBS.ui.t(key, lang)
+      : key;
+  }
+
   /* ── DOM helper — inline styles, textContent only (XSS-safe) ─────────── */
   function el(tag, styles, text) {
     var node = document.createElement(tag);
@@ -55,11 +62,11 @@
     if (score < 70)   return 'var(--clr-warning-bg)';
     return 'var(--clr-compliant-bg)';
   }
-  function bandLabel(score) {
-    if (score == null) return 'No data';
-    if (score < 40)   return 'High Risk';
-    if (score < 70)   return 'Moderate';
-    return 'Good';
+  function bandLabel(score, lang) {
+    if (score == null) return t('dash.bandNoData', lang);
+    if (score < 40)   return t('dash.bandHighRisk', lang);
+    if (score < 70)   return t('dash.bandModerate', lang);
+    return t('dash.bandGood', lang);
   }
 
   /* ── Destroy previous chart instances ───────────────────────────────── */
@@ -147,7 +154,7 @@
     var scoreSub = el('span',
       'font-size:0.625rem;font-weight:700;text-transform:uppercase;' +
       'letter-spacing:0.05em;color:' + bandColor(score) + ';margin-top:2px;');
-    scoreSub.textContent = bandLabel(score);
+    scoreSub.textContent = bandLabel(score, lang);
     circle.appendChild(scoreSub);
     scoreBlock.appendChild(circle);
     card.appendChild(scoreBlock);
@@ -156,7 +163,7 @@
     var mid = el('div', '');
     var titleRow = el('div', 'display:flex;align-items:baseline;gap:0.75rem;margin-bottom:0.5rem;');
     var mainTitle = el('span', 'font-size:1rem;font-weight:700;color:var(--clr-navy);');
-    mainTitle.textContent = 'Security Assessment Overview';
+    mainTitle.textContent = t('dash.overview', lang);
     titleRow.appendChild(mainTitle);
     if (mat) {
       var matBadge = el('span',
@@ -172,8 +179,8 @@
     var compPct = Math.round(comp.percent);
     var compLabel = el('div',
       'font-size:0.75rem;color:var(--clr-text-muted);margin-bottom:0.375rem;');
-    compLabel.textContent = 'Completeness: ' + comp.answered + ' / ' + comp.total +
-      ' questions answered (' + compPct + '%)';
+    compLabel.textContent = t('dash.completenessLabel', lang) + comp.answered + ' / ' + comp.total +
+      t('dash.questionsAnswered', lang) + compPct + '%)';
     mid.appendChild(compLabel);
 
     var track = el('div',
@@ -187,7 +194,7 @@
     if (compPct < 100) {
       mid.appendChild(el('div',
         'font-size:0.7rem;color:var(--clr-text-muted);margin-top:0.25rem;',
-        'Scores may change as more questions are completed.'));
+        t('dash.incomplete', lang)));
     }
     card.appendChild(mid);
 
@@ -199,17 +206,17 @@
     pill.appendChild(el('div',
       'font-size:0.625rem;font-weight:700;text-transform:uppercase;' +
       'letter-spacing:0.07em;color:var(--clr-text-muted);margin-bottom:0.125rem;',
-      'Risk Band'));
+      t('dash.riskBand', lang)));
     pill.appendChild(el('div',
       'font-size:1rem;font-weight:800;color:' + bandColor(score) + ';',
-      bandLabel(score)));
+      bandLabel(score, lang)));
     card.appendChild(pill);
 
     return card;
   }
 
   /* ── 2. METRICS ROW (risk · coverage · status) ───────────────────────── */
-  function buildMetricsRow(template, assessment, scoring, compSummary) {
+  function buildMetricsRow(template, assessment, scoring, compSummary, lang) {
     var row = el('div',
       'display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;');
 
@@ -220,13 +227,13 @@
     var riskCard = el('div',
       'background:var(--clr-surface);border:1px solid var(--clr-border);' +
       'border-radius:var(--radius-lg);padding:var(--sp-5) var(--sp-6);box-shadow:var(--shadow-xs);');
-    riskCard.appendChild(labelDiv('Threat-Weighted Risk'));
+    riskCard.appendChild(labelDiv(t('dash.threatRisk', lang)));
     riskCard.appendChild(el('div',
       'font-size:2rem;font-weight:800;line-height:1;color:' + riskColor + ';',
       riskScore != null ? riskScore + '%' : '—'));
     riskCard.appendChild(el('div',
       'font-size:0.75rem;color:var(--clr-text-muted);margin-top:0.25rem;',
-      'weighted exposure — lower is better'));
+      t('dash.riskSubtext', lang)));
     row.appendChild(riskCard);
 
     /* Card B — Framework coverage */
@@ -234,7 +241,7 @@
     var fwCard = el('div',
       'background:var(--clr-surface);border:1px solid var(--clr-border);' +
       'border-radius:var(--radius-lg);padding:var(--sp-5) var(--sp-6);box-shadow:var(--shadow-xs);');
-    fwCard.appendChild(labelDiv('Framework Coverage'));
+    fwCard.appendChild(labelDiv(t('dash.fwCoverage', lang)));
     var FRAMEWORKS = [
       { key: 'iso27001', label: 'ISO 27001', color: 'var(--clr-accent)'    },
       { key: 'nis2',     label: 'NIS2',      color: 'var(--clr-partial)'   },
@@ -260,13 +267,13 @@
     var sumCard = el('div',
       'background:var(--clr-surface);border:1px solid var(--clr-border);' +
       'border-radius:var(--radius-lg);padding:var(--sp-5) var(--sp-6);box-shadow:var(--shadow-xs);');
-    sumCard.appendChild(labelDiv('Status Breakdown'));
+    sumCard.appendChild(labelDiv(t('dash.statusBreakdown', lang)));
     var STATUS_ROWS = [
-      { key: 'compliant',    label: 'Compliant',     color: 'var(--clr-compliant)'   },
-      { key: 'partial',      label: 'Partial',        color: 'var(--clr-partial)'     },
-      { key: 'nonCompliant', label: 'Non-compliant',  color: 'var(--clr-danger)'      },
-      { key: 'na',           label: 'N/A',            color: 'var(--clr-na)'          },
-      { key: 'unanswered',   label: 'Unanswered',     color: 'var(--clr-text-muted)'  }
+      { key: 'compliant',    label: t('status.compliant', lang),    color: 'var(--clr-compliant)'   },
+      { key: 'partial',      label: t('status.partial', lang),      color: 'var(--clr-partial)'     },
+      { key: 'nonCompliant', label: t('status.nonCompliant', lang), color: 'var(--clr-danger)'      },
+      { key: 'na',           label: t('status.na', lang),           color: 'var(--clr-na)'          },
+      { key: 'unanswered',   label: t('status.unanswered', lang),   color: 'var(--clr-text-muted)'  }
     ];
     for (var si = 0; si < STATUS_ROWS.length; si++) {
       var sr = STATUS_ROWS[si];
@@ -292,7 +299,7 @@
   /* ── 3. CHARTS (radar + doughnut) ────────────────────────────────────── */
   function buildChartSection(template, assessment, scoring, compSummary, lang) {
     var section = el('div', 'margin-bottom:1.5rem;');
-    section.appendChild(sectionHeading('Score Visualisation'));
+    section.appendChild(sectionHeading(t('dash.scoreVis', lang)));
 
     var grid = el('div',
       'display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;');
@@ -301,13 +308,13 @@
       'background:var(--clr-surface);border:1px solid var(--clr-border);' +
       'border-radius:var(--radius-lg);padding:var(--sp-5) var(--sp-6);' +
       'box-shadow:var(--shadow-xs);text-align:center;');
-    radarCard.appendChild(labelDiv('Domain Scores'));
+    radarCard.appendChild(labelDiv(t('dash.domainScores', lang)));
 
     var doughnutCard = el('div',
       'background:var(--clr-surface);border:1px solid var(--clr-border);' +
       'border-radius:var(--radius-lg);padding:var(--sp-5) var(--sp-6);' +
       'box-shadow:var(--shadow-xs);text-align:center;');
-    doughnutCard.appendChild(labelDiv('Status Breakdown'));
+    doughnutCard.appendChild(labelDiv(t('dash.statusBreakdown', lang)));
 
     /* Compute domain scores for radar */
     var domainLabels = [];
@@ -325,7 +332,7 @@
     if (hasNull) {
       radarCard.appendChild(el('div',
         'font-size:0.7rem;color:var(--clr-text-muted);margin-bottom:0.25rem;',
-        'Domains with no scored answers shown as 0'));
+        t('dash.noScores', lang)));
     }
 
     if (typeof root.Chart !== 'undefined') {
@@ -353,7 +360,7 @@
         data: {
           labels: domainLabels,
           datasets: [{
-            label: 'Score (%)',
+            label: t('dash.scoreDataset', lang),
             data: domainData,
             backgroundColor: 'rgba(28,93,176,0.15)',
             borderColor: '#1c5db0',
@@ -382,7 +389,13 @@
       _doughnutChart = new root.Chart(doughnutCanvas.getContext('2d'), {
         type: 'doughnut',
         data: {
-          labels: ['Compliant', 'Partial', 'Non-compliant', 'N/A', 'Unanswered'],
+          labels: [
+              t('status.compliant', lang),
+              t('status.partial', lang),
+              t('status.nonCompliant', lang),
+              t('status.na', lang),
+              t('status.unanswered', lang)
+            ],
           datasets: [{
             data: [
               compSummary.compliant,
@@ -412,7 +425,7 @@
       /* Textual fallback when Chart.js is absent */
       radarCard.appendChild(el('div',
         'font-size:0.7rem;color:var(--clr-warning);margin-bottom:0.5rem;',
-        'Chart.js not available — showing scores as text.'));
+        t('dash.noChartJs', lang)));
 
       for (var fdi = 0; fdi < domains.length; fdi++) {
         var fdom = domains[fdi];
@@ -444,14 +457,14 @@
 
       doughnutCard.appendChild(el('div',
         'font-size:0.7rem;color:var(--clr-warning);margin-bottom:0.5rem;',
-        'Chart.js not available — showing counts as text.'));
+        t('dash.noChartJsDoughnut', lang)));
 
       var STAT_LABELS = [
-        { key: 'compliant',    label: 'Compliant'     },
-        { key: 'partial',      label: 'Partial'        },
-        { key: 'nonCompliant', label: 'Non-compliant'  },
-        { key: 'na',           label: 'N/A'            },
-        { key: 'unanswered',   label: 'Unanswered'     }
+        { key: 'compliant',    label: t('status.compliant', lang)    },
+        { key: 'partial',      label: t('status.partial', lang)      },
+        { key: 'nonCompliant', label: t('status.nonCompliant', lang) },
+        { key: 'na',           label: t('status.na', lang)           },
+        { key: 'unanswered',   label: t('status.unanswered', lang)   }
       ];
       var ftable = el('table', 'width:100%;border-collapse:collapse;font-size:0.875rem;');
       for (var fsi = 0; fsi < STAT_LABELS.length; fsi++) {
@@ -476,14 +489,14 @@
   /* ── 4. PER-DOMAIN DRILL-DOWN ────────────────────────────────────────── */
   function buildDomainDrilldown(template, assessment, scoring, lang) {
     var section = el('div', 'margin-bottom:1.5rem;');
-    section.appendChild(sectionHeading('Domain Drill-Down'));
+    section.appendChild(sectionHeading(t('dash.drillDown', lang)));
 
     var STATUS_INFO = {
-      'compliant':     { label: 'Compliant',     color: 'var(--clr-compliant)', bg: 'var(--clr-compliant-bg)' },
-      'partial':       { label: 'Partial',        color: 'var(--clr-partial)',   bg: 'var(--clr-partial-bg)'   },
-      'non-compliant': { label: 'Non-compliant',  color: 'var(--clr-danger)',    bg: 'var(--clr-danger-bg)'    },
-      'na':            { label: 'N/A',            color: 'var(--clr-na)',        bg: 'var(--clr-na-bg)'        },
-      'unanswered':    { label: 'Unanswered',     color: 'var(--clr-text-muted)',bg: 'var(--clr-bg)'           }
+      'compliant':     { label: t('status.compliant', lang),    color: 'var(--clr-compliant)', bg: 'var(--clr-compliant-bg)' },
+      'partial':       { label: t('status.partial', lang),      color: 'var(--clr-partial)',   bg: 'var(--clr-partial-bg)'   },
+      'non-compliant': { label: t('status.nonCompliant', lang), color: 'var(--clr-danger)',    bg: 'var(--clr-danger-bg)'    },
+      'na':            { label: t('status.na', lang),           color: 'var(--clr-na)',        bg: 'var(--clr-na-bg)'        },
+      'unanswered':    { label: t('status.unanswered', lang),   color: 'var(--clr-text-muted)',bg: 'var(--clr-bg)'           }
     };
 
     var domains = template.domains || [];
@@ -508,7 +521,7 @@
 
       detSummary.appendChild(el('span',
         'font-size:0.75rem;color:var(--clr-text-muted);font-variant-numeric:tabular-nums;white-space:nowrap;',
-        ds.answered + '/' + ds.total + ' answered'));
+        ds.answered + '/' + ds.total + ' ' + t('dash.answered', lang)));
 
       detSummary.appendChild(el('span',
         'font-size:0.875rem;font-weight:800;min-width:3.5rem;text-align:right;' +
@@ -612,11 +625,11 @@
   /* ── 5. ACTIONABLE GAPS — prioritised remediation ────────────────────── */
   function buildActionableGaps(recs, template, lang) {
     var section = el('div', 'margin-bottom:2rem;');
-    section.appendChild(sectionHeading('Actionable Gaps — Prioritised Remediation'));
+    section.appendChild(sectionHeading(t('dash.gaps', lang)));
 
     if (!recs || recs.length === 0) {
       section.appendChild(el('p', 'color:var(--clr-text-muted);',
-        'No gaps to remediate — all answered questions are compliant or N/A.'));
+        t('dash.noGaps', lang)));
       return section;
     }
 
@@ -634,7 +647,11 @@
     var thead = document.createElement('thead');
     var hrow  = document.createElement('tr');
     hrow.style.background = 'var(--clr-bg)';
-    var COLS = ['#', 'Domain', 'Question', 'Status', 'Threat', 'References', 'Remediation'];
+    var COLS = [
+      t('dash.colNum', lang), t('dash.colDomain', lang), t('dash.colQuestion', lang),
+      t('dash.colStatus', lang), t('dash.colThreat', lang),
+      t('dash.colRefs', lang), t('dash.colRem', lang)
+    ];
     for (var ci = 0; ci < COLS.length; ci++) {
       var th = el('th',
         'text-align:left;padding:0.5rem 0.75rem;' +
@@ -689,7 +706,7 @@
 
       /* Status */
       var stColor = rec.status === 'non-compliant' ? 'var(--clr-danger)' : 'var(--clr-partial)';
-      var stLabel = rec.status === 'non-compliant' ? 'Non-compliant' : 'Partial';
+      var stLabel = rec.status === 'non-compliant' ? t('status.nonCompliant', lang) : t('status.partial', lang);
       tr.appendChild(el('td',
         CELL + 'font-weight:700;white-space:nowrap;color:' + stColor + ';', stLabel));
 
@@ -748,7 +765,7 @@
     if (hasCrit) {
       section.appendChild(el('div',
         'margin-top:0.5rem;font-size:0.7rem;color:var(--clr-text-muted);',
-        '⚠ Rows highlighted in red have threat level 4–5 (critical) — address these first.'));
+        t('dash.criticalNote', lang)));
     }
 
     return section;
@@ -784,7 +801,7 @@
     wrapper.appendChild(buildHeroCard(overall, mat, comp, lang));
 
     /* 2 — Three metric cards (risk, framework coverage, status) */
-    wrapper.appendChild(buildMetricsRow(template, assessment, scoring, compSum));
+    wrapper.appendChild(buildMetricsRow(template, assessment, scoring, compSum, lang));
 
     /* 3 — Radar + doughnut charts */
     wrapper.appendChild(buildChartSection(template, assessment, scoring, compSum, lang));

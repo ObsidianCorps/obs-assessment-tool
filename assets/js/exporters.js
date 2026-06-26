@@ -8,6 +8,26 @@
   var i18n = (typeof require !== 'undefined') ? require('./i18n.js') : (root_OBS().i18n);
   function root_OBS() { return (typeof window !== 'undefined' ? window : globalThis).OBS; }
 
+  /* ── UI chrome string helper ─────────────────────────────────── */
+  function t(key, lang) {
+    var obs = (typeof window !== 'undefined' ? window : globalThis).OBS;
+    var ui = obs && obs.ui;
+    return (ui && typeof ui.t === 'function') ? ui.t(key, lang) : key;
+  }
+
+  /* ── Status key → translated label ──────────────────────────── */
+  var STATUS_KEY_MAP = {
+    'compliant':     'status.compliant',
+    'partial':       'status.partial',
+    'non-compliant': 'status.nonCompliant',
+    'na':            'status.na',
+    'unanswered':    'status.unanswered'
+  };
+  function statusLabel(status, lang) {
+    var key = STATUS_KEY_MAP[status];
+    return key ? t(key, lang) : (status || t('status.unanswered', lang));
+  }
+
   function esc(v) {
     v = (v == null) ? '' : String(v);
     // Neutralise CSV formula injection: a leading = + - @ (or tab/CR) can be
@@ -44,7 +64,7 @@
     }
     return fallback;
   }
-  var STATUS_LABEL = { compliant: 'Compliant', partial: 'Partial', 'non-compliant': 'Non-compliant', na: 'N/A', unanswered: 'Unanswered' };
+  /* STATUS_LABEL kept for any external reference; PDF now uses statusLabel(status, lang) */
 
   // Produce a polished, branded A4 report. `chartImages` = { radar, doughnut } PNG data URLs.
   function buildPdf(template, assessment, lang, chartImages, options) {
@@ -101,7 +121,7 @@
     doc.setFont('helvetica', 'normal'); doc.setFontSize(smallFs);
     var hFwStr = (template.frameworks || []).join('  \xb7  ');
     var hFwLines = hFwStr ? doc.splitTextToSize(hFwStr, maxHdrW) : [];
-    var hSubText = 'Information Security Assessment Report';
+    var hSubText = t('pdf.subheader', lang);
 
     // Approximate total pixel height of the text block
     var textBlockH = hTitleLines.length * titleLH
@@ -157,15 +177,15 @@
       doc.text(String(value), M + 130, y);
       y += 20;
     }
-    metaRow('Client / organisation', meta.clientName);
-    metaRow('Assessor', meta.assessorName);
-    metaRow('Agency', meta.assessorOrg);
-    metaRow('Date', meta.date);
+    metaRow(t('pdf.metaClient', lang), meta.clientName);
+    metaRow(t('pdf.metaAssessor', lang), meta.assessorName);
+    metaRow(t('pdf.metaAgency', lang), meta.assessorOrg);
+    metaRow(t('pdf.metaDate', lang), meta.date);
     y += 6;
     if (template.translationStatus && template.translationStatus[lang]) {
       doc.setFillColor(255, 244, 229); doc.rect(M, y - 10, PAGE_W - 2 * M, 22, 'F');
       doc.setTextColor(150, 75, 0); doc.setFontSize(9);
-      doc.text('Translation (' + lang + ') is machine-drafted and pending professional review.', M + 8, y + 4);
+      doc.text(t('pdf.translationPrefix', lang) + lang + t('pdf.translationSuffix', lang), M + 8, y + 4);
       doc.setTextColor(ink[0], ink[1], ink[2]); y += 28;
     }
 
@@ -185,16 +205,16 @@
         doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(muted[0], muted[1], muted[2]);
         doc.text(small.toUpperCase(), cx, y + 52);
       }
-      summaryCell(0, overall == null ? 'n/a' : Math.round(overall) + '%', 'Overall score');
-      summaryCell(1, mat ? String(mat.level) + '/5' : '–', mat ? I.pick(mat.label, lang) : 'Maturity');
-      summaryCell(2, c.answered + '/' + c.total, 'Answered');
-      summaryCell(3, String(comp.criticalGaps.length), 'Critical gaps');
+      summaryCell(0, overall == null ? 'n/a' : Math.round(overall) + '%', t('pdf.overallScore', lang));
+      summaryCell(1, mat ? String(mat.level) + '/5' : '–', mat ? I.pick(mat.label, lang) : t('pdf.maturity', lang));
+      summaryCell(2, c.answered + '/' + c.total, t('pdf.answered', lang));
+      summaryCell(3, String(comp.criticalGaps.length), t('pdf.criticalGaps', lang));
       doc.setTextColor(ink[0], ink[1], ink[2]); y += 86;
     }
 
     // --- Charts ---
     if (showCharts && chartImages && (chartImages.radar || chartImages.doughnut)) {
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.text('Scores by domain', M, y); y += 8;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.text(t('pdf.scoresByDomain', lang), M, y); y += 8;
       if (chartImages.radar) doc.addImage(chartImages.radar, 'PNG', M, y, 250, 250);
       if (chartImages.doughnut) doc.addImage(chartImages.doughnut, 'PNG', M + 280, y + 20, 210, 210);
       y += 264;
@@ -206,12 +226,15 @@
       var body = recs.map(function (r, i) {
         var rem = r.remediation || {};
         var remTxt = [rem.owner, rem.targetDate, rem.status].filter(Boolean).join(' · ');
-        return [String(i + 1), I.pick(r.text, lang), STATUS_LABEL[r.status] || r.status, String(r.threat), refStr(r.references), remTxt];
+        return [String(i + 1), I.pick(r.text, lang), statusLabel(r.status, lang), String(r.threat), refStr(r.references), remTxt];
       });
       if (y > PAGE_H - 140) { doc.addPage(); y = M; }
       doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(ink[0], ink[1], ink[2]);
-      doc.text('Findings & recommendations (' + recs.length + ')', M, y); y += 10;
-      var head = [['#', 'Finding', 'Status', 'Threat', 'References', 'Remediation']];
+      doc.text(t('pdf.findingsRecsPrefix', lang) + recs.length + ')', M, y); y += 10;
+      var head = [[
+        t('pdf.colNum', lang), t('pdf.colFinding', lang), t('pdf.colStatus', lang),
+        t('pdf.colThreat', lang), t('pdf.colRefs', lang), t('pdf.colRem', lang)
+      ]];
       if (typeof doc.autoTable === 'function') {
         doc.autoTable({
           startY: y + 4, head: head, body: body, margin: { left: M, right: M },
@@ -237,7 +260,7 @@
       doc.addPage();
       var yD = M;
       doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(ink[0], ink[1], ink[2]);
-      doc.text('Detailed Assessment', M, yD); yD += 24;
+      doc.text(t('pdf.detailedAssessment', lang), M, yD); yD += 24;
 
       (template.domains || []).forEach(function (domain) {
         // Domain heading + score
@@ -266,9 +289,9 @@
         // Build table rows
         var qBody = allQs.map(function (q) {
           var a = (assessment.answers || {})[q.id] || {};
-          var statusLbl = STATUS_LABEL[a.status] || a.status || 'Unanswered';
+          var statusLbl = statusLabel(a.status, lang);
           if (a.status === 'partial') {
-            statusLbl = 'Partial (' + (a.partialPercent == null ? 50 : a.partialPercent) + '%)';
+            statusLbl = t('status.partial', lang) + ' (' + (a.partialPercent == null ? 50 : a.partialPercent) + '%)';
           }
           var rem = a.remediation || {};
           var remTxt = [rem.owner, rem.targetDate, rem.status].filter(Boolean).join(' / ');
@@ -282,7 +305,10 @@
           ];
         });
 
-        var qHead = [['ID', 'Question', 'Status', 'N/A Reason', 'Evidence', 'Remediation']];
+        var qHead = [[
+          t('pdf.colId', lang), t('pdf.colQuestion', lang), t('pdf.colStatus', lang),
+          t('pdf.colNaReason', lang), t('pdf.colEvidence', lang), t('pdf.colRem', lang)
+        ]];
 
         if (typeof doc.autoTable === 'function') {
           doc.autoTable({
@@ -326,9 +352,9 @@
       doc.setPage(p);
       doc.setDrawColor(225, 228, 232); doc.line(M, PAGE_H - 28, PAGE_W - M, PAGE_H - 28);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(muted[0], muted[1], muted[2]);
-      var left = (meta.assessorOrg || meta.assessorName || 'OBS Assessment Tool') + (meta.clientName ? '  —  ' + meta.clientName : '') + '   ·   Confidential';
+      var left = (meta.assessorOrg || meta.assessorName || 'OBS Assessment Tool') + (meta.clientName ? '  —  ' + meta.clientName : '') + t('pdf.confidential', lang);
       doc.text(left, M, PAGE_H - 14, { maxWidth: PAGE_W - 2 * M - 120 });
-      doc.text('Page ' + p + ' of ' + pages, PAGE_W - M, PAGE_H - 14, { align: 'right' });
+      doc.text(t('pdf.page', lang) + p + t('pdf.of', lang) + pages, PAGE_W - M, PAGE_H - 14, { align: 'right' });
     }
     return doc;
   }

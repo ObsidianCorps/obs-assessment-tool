@@ -320,11 +320,11 @@
           <!-- Populated dynamically from template.languages by app.js -->
         </div>
         <div class="app-toolbar" role="toolbar" aria-label="Assessment actions">
-          <button type="button" id="btn-save">Save&nbsp;(JSON)</button>
-          <button type="button" id="btn-import">Import</button>
+          <button type="button" id="btn-save" data-i18n="btn.save">Save&nbsp;(JSON)</button>
+          <button type="button" id="btn-import" data-i18n="btn.import">Import</button>
           <input type="file" id="import-file" accept="application/json" aria-hidden="true" hidden>
-          <button type="button" id="btn-export-pdf">Export&nbsp;PDF</button>
-          <button type="button" id="btn-export-csv">Export&nbsp;CSV</button>
+          <button type="button" id="btn-export-pdf" data-i18n="btn.exportPdf">Export&nbsp;PDF</button>
+          <button type="button" id="btn-export-csv" data-i18n="btn.exportCsv">Export&nbsp;CSV</button>
         </div>
       </div>
     </nav>
@@ -333,13 +333,13 @@
   <!-- ── Banners (all hidden by default) ─────── -->
   <div id="sq-banner" class="banner banner--info" role="alert" hidden>
     <div class="banner-inner">
-      <span>&#9432; The Albanian (Shqip) version of this template is a machine-generated draft and may contain inaccuracies. Verify against the English original before use.</span>
+      <span data-i18n="banner.sqDraft">&#9432; The Albanian (Shqip) version of this template is a machine-generated draft and may contain inaccuracies. Verify against the English original before use.</span>
     </div>
   </div>
 
   <div id="localstorage-warning" class="banner banner--warning" role="alert" hidden>
     <div class="banner-inner">
-      <span>&#9888; Local storage is unavailable in your browser. Progress cannot be auto-saved. Consider using a different browser or checking your privacy settings.</span>
+      <span data-i18n="banner.noStorage">&#9888; Local storage is unavailable in your browser. Progress cannot be auto-saved. Consider using a different browser or checking your privacy settings.</span>
     </div>
   </div>
 
@@ -347,8 +347,8 @@
     <div class="banner-inner">
       <span id="draft-banner-text"></span>
       <div class="banner__actions">
-        <button type="button" id="btn-resume-draft" class="btn-primary btn-sm">Resume</button>
-        <button type="button" id="btn-discard-draft" class="btn-secondary btn-sm">Start fresh</button>
+        <button type="button" id="btn-resume-draft" class="btn-primary btn-sm" data-i18n="btn.resume">Resume</button>
+        <button type="button" id="btn-discard-draft" class="btn-secondary btn-sm" data-i18n="btn.startFresh">Start fresh</button>
       </div>
     </div>
   </div>
@@ -366,28 +366,32 @@
               role="tab"
               aria-selected="true"
               aria-controls="tab-start"
-              data-tab="start">Start</button>
+              data-tab="start"
+              data-i18n="tab.start">Start</button>
       <button type="button"
               id="tab-btn-questionnaire"
               class="app-tab"
               role="tab"
               aria-selected="false"
               aria-controls="tab-questionnaire"
-              data-tab="questionnaire">Questionnaire</button>
+              data-tab="questionnaire"
+              data-i18n="tab.questionnaire">Questionnaire</button>
       <button type="button"
               id="tab-btn-dashboard"
               class="app-tab"
               role="tab"
               aria-selected="false"
               aria-controls="tab-dashboard"
-              data-tab="dashboard">Dashboard</button>
+              data-tab="dashboard"
+              data-i18n="tab.dashboard">Dashboard</button>
       <button type="button"
               id="tab-btn-editor"
               class="app-tab"
               role="tab"
               aria-selected="false"
               aria-controls="tab-editor"
-              data-tab="editor">Template editor</button>
+              data-tab="editor"
+              data-i18n="tab.editor">Template editor</button>
     </div>
   </nav>
 
@@ -398,70 +402,70 @@
     <section id="tab-start" role="tabpanel" aria-labelledby="tab-btn-start">
       <div class="start-bg">
         <div class="start-card">
-          <h1>New Assessment</h1>
-          <p class="start-card__desc">
+          <h1 data-i18n="start.h1">New Assessment</h1>
+          <p class="start-card__desc" data-i18n="start.desc">
             Fill in the details below, select a template, then click
             <strong>Begin assessment</strong>. Progress is saved automatically.
           </p>
 
-          <span class="form-section-label">Assessment details</span>
+          <span class="form-section-label" data-i18n="start.sectionDetails">Assessment details</span>
 
           <div class="form-group">
-            <label for="client-name">Client / Organisation name</label>
+            <label for="client-name" data-i18n="start.clientName">Client / Organisation name</label>
             <input type="text" id="client-name" name="clientName"
                    placeholder="e.g. Acme Corp" autocomplete="organization">
           </div>
 
           <div class="form-group">
-            <label for="assessor-name">Assessor name</label>
+            <label for="assessor-name" data-i18n="start.assessorName">Assessor name</label>
             <input type="text" id="assessor-name" name="assessorName"
                    placeholder="e.g. Jane Smith" autocomplete="name">
           </div>
 
           <div class="form-group">
-            <label for="meta-org">Agency / organisation</label>
+            <label for="meta-org" data-i18n="start.agency">Agency / organisation</label>
             <input type="text" id="meta-org" name="assessorOrg"
                    placeholder="e.g. OBS Security" autocomplete="organization">
           </div>
 
           <div class="form-group">
-            <label for="assessment-date">Assessment date</label>
+            <label for="assessment-date" data-i18n="start.date">Assessment date</label>
             <input type="date" id="assessment-date" name="assessmentDate">
           </div>
 
           <hr class="form-divider">
-          <span class="form-section-label">Report logo (optional)</span>
+          <span class="form-section-label" data-i18n="start.sectionLogo">Report logo (optional)</span>
 
           <div class="form-group">
-            <label for="logo-file">Upload logo (PNG or JPEG)</label>
+            <label for="logo-file" data-i18n="start.uploadLogo">Upload logo (PNG or JPEG)</label>
             <div class="logo-row">
               <input type="file" id="logo-file" accept="image/png,image/jpeg">
-              <button type="button" id="btn-remove-logo" class="btn-secondary btn-sm">Remove logo</button>
+              <button type="button" id="btn-remove-logo" class="btn-secondary btn-sm" data-i18n="start.removeLogo">Remove logo</button>
             </div>
             <img id="logo-preview" alt="Report logo preview" hidden>
-            <p class="form-hint">The logo will appear in the header of exported PDF reports.</p>
+            <p class="form-hint" data-i18n="start.logoHint">The logo will appear in the header of exported PDF reports.</p>
           </div>
 
           <div class="form-group">
-            <label for="meta-brand-color">Report accent colour (optional)</label>
+            <label for="meta-brand-color" data-i18n="start.accentColor">Report accent colour (optional)</label>
             <div class="logo-row">
               <input type="color" id="meta-brand-color" value="#0f213d">
-              <button type="button" id="btn-reset-brand" class="btn-secondary btn-sm">Use default</button>
+              <button type="button" id="btn-reset-brand" class="btn-secondary btn-sm" data-i18n="start.useDefault">Use default</button>
             </div>
-            <p class="form-hint">Sets the accent colour in exported PDF reports. Leave as default (navy) if unsure.</p>
+            <p class="form-hint" data-i18n="start.colorHint">Sets the accent colour in exported PDF reports. Leave as default (navy) if unsure.</p>
           </div>
 
           <hr class="form-divider">
-          <span class="form-section-label">Template</span>
+          <span class="form-section-label" data-i18n="start.sectionTemplate">Template</span>
 
           <div class="form-group">
-            <label for="template-select">Assessment template</label>
+            <label for="template-select" data-i18n="start.templateLabel">Assessment template</label>
             <select id="template-select" name="templateSelect">
               <!-- Populated dynamically from OBS_TEMPLATES by app.js -->
             </select>
           </div>
 
-          <button type="button" id="btn-begin" class="btn-primary" style="width:100%; margin-top:var(--sp-2);">
+          <button type="button" id="btn-begin" class="btn-primary" style="width:100%; margin-top:var(--sp-2);" data-i18n="start.begin">
             Begin assessment
           </button>
         </div>
@@ -472,11 +476,11 @@
     <section id="tab-questionnaire" role="tabpanel" aria-labelledby="tab-btn-questionnaire" hidden>
       <div class="questionnaire-layout">
         <aside class="sidebar" id="questionnaire-sidebar">
-          <p class="sidebar-section-label">Domains</p>
+          <p class="sidebar-section-label" data-i18n="q.domains">Domains</p>
           <ul class="sidebar-nav" id="sidebar-domain-list"></ul>
           <div class="sidebar-progress" id="sidebar-progress-container">
             <div class="sidebar-progress__label">
-              <span>Progress</span>
+              <span data-i18n="q.progress">Progress</span>
               <span id="sidebar-progress-pct">0%</span>
             </div>
             <div class="sidebar-progress__bar-track">
@@ -485,7 +489,7 @@
           </div>
         </aside>
         <div class="app-main" id="questionnaire-main">
-          <p class="placeholder-text">Select a template and click <strong>Begin assessment</strong> to start.</p>
+          <p class="placeholder-text" data-i18n="q.placeholder">Select a template and click <strong>Begin assessment</strong> to start.</p>
         </div>
       </div>
     </section>
@@ -494,7 +498,7 @@
     <section id="tab-dashboard" role="tabpanel" aria-labelledby="tab-btn-dashboard" hidden>
       <div class="dashboard-layout">
         <div class="app-main" id="dashboard-main">
-          <p class="placeholder-text">Complete the questionnaire to view the dashboard.</p>
+          <p class="placeholder-text" data-i18n="dash.placeholder">Complete the questionnaire to view the dashboard.</p>
         </div>
       </div>
     </section>
@@ -510,32 +514,32 @@
 
   <!-- ── PDF export options dialog ──────────── -->
   <dialog id="pdf-options-dialog" aria-labelledby="pdf-opts-heading">
-    <h2 id="pdf-opts-heading">PDF export options</h2>
+    <h2 id="pdf-opts-heading" data-i18n="pdfopts.title">PDF export options</h2>
     <div class="pdf-opts-list">
       <div class="pdf-opts-item">
         <input type="checkbox" id="pdf-opt-summary" checked>
-        <label for="pdf-opt-summary">Executive summary</label>
+        <label for="pdf-opt-summary" data-i18n="pdfopts.summary">Executive summary</label>
       </div>
       <div class="pdf-opts-item">
         <input type="checkbox" id="pdf-opt-charts" checked>
-        <label for="pdf-opt-charts">Charts</label>
+        <label for="pdf-opt-charts" data-i18n="pdfopts.charts">Charts</label>
       </div>
       <div class="pdf-opts-item">
         <input type="checkbox" id="pdf-opt-recommendations" checked>
-        <label for="pdf-opt-recommendations">Findings &amp; recommendations</label>
+        <label for="pdf-opt-recommendations" data-i18n="pdfopts.recommendations">Findings &amp; recommendations</label>
       </div>
       <div class="pdf-opts-item">
         <input type="checkbox" id="pdf-opt-details" checked>
-        <label for="pdf-opt-details">Detailed answers &amp; evidence/notes</label>
+        <label for="pdf-opt-details" data-i18n="pdfopts.details">Detailed answers &amp; evidence/notes</label>
       </div>
       <div class="pdf-opts-item">
         <input type="checkbox" id="pdf-opt-narratives" checked>
-        <label for="pdf-opt-narratives">Domain narratives</label>
+        <label for="pdf-opt-narratives" data-i18n="pdfopts.narratives">Domain narratives</label>
       </div>
     </div>
     <div class="pdf-opts-actions">
-      <button type="button" id="pdf-options-generate" class="btn-primary btn-sm">Generate PDF</button>
-      <button type="button" id="pdf-options-cancel" class="btn-secondary btn-sm">Cancel</button>
+      <button type="button" id="pdf-options-generate" class="btn-primary btn-sm" data-i18n="pdfopts.generate">Generate PDF</button>
+      <button type="button" id="pdf-options-cancel" class="btn-secondary btn-sm" data-i18n="pdfopts.cancel">Cancel</button>
     </div>
   </dialog>
 
@@ -569,6 +573,7 @@
   <script src="assets/js/vendor/jspdf.umd.min.js"></script>
   <script src="assets/js/vendor/jspdf.plugin.autotable.min.js"></script>
   <script src="assets/js/i18n.js"></script>
+  <script src="assets/js/ui-strings.js"></script>
   <script src="assets/js/scoring.js"></script>
   <script src="assets/js/validate.js"></script>
   <script src="assets/js/storage.js"></script>

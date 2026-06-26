@@ -10,6 +10,15 @@
   var _panel = null;        // the editor container element
   var _listenersSet = false;// whether delegated listeners are attached
 
+  /* ── UI chrome string helper ─────────────────────────────── */
+  function t(key) {
+    var g = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
+    var lang = (g.OBS && g.OBS.app) ? (g.OBS.app.lang || 'en') : 'en';
+    return (g.OBS && g.OBS.ui && typeof g.OBS.ui.t === 'function')
+      ? g.OBS.ui.t(key, lang)
+      : key;
+  }
+
   /* ── Utility helpers ─────────────────────────────────────── */
 
   function deepClone(o) {
@@ -287,7 +296,7 @@
     var loadLbl = document.createElement('label');
     loadLbl.className = 'editor-toolbar__label';
     loadLbl.setAttribute('for', 'editor-template-source');
-    loadLbl.textContent = 'Load from:';
+    loadLbl.textContent = t('ed.loadFrom');
     loadGroup.appendChild(loadLbl);
 
     var srcSel = document.createElement('select');
@@ -302,7 +311,7 @@
     });
     var blankOpt = document.createElement('option');
     blankOpt.value = '__blank__';
-    blankOpt.textContent = '— Blank template —';
+    blankOpt.textContent = t('ed.blankTemplate');
     srcSel.appendChild(blankOpt);
     // Pre-select current wc id if present
     if (wc && wc.id) {
@@ -315,7 +324,7 @@
     }
     loadGroup.appendChild(srcSel);
 
-    loadGroup.appendChild(makeBtn('Load', 'btn-secondary btn-sm editor-btn', function () {
+    loadGroup.appendChild(makeBtn(t('ed.load'), 'btn-secondary btn-sm editor-btn', function () {
       var id = srcSel.value;
       var states = captureOpenStates();
       if (id === '__blank__') {
@@ -331,13 +340,13 @@
     // Action buttons
     var actions = makeEl('div', 'editor-toolbar__actions');
 
-    actions.appendChild(makeBtn('Validate', 'btn-secondary btn-sm editor-btn', function () {
+    actions.appendChild(makeBtn(t('ed.validate'), 'btn-secondary btn-sm editor-btn', function () {
       if (window.OBS && OBS.validate) {
         showValidationResult(OBS.validate.validateTemplate(wc));
       }
     }));
 
-    actions.appendChild(makeBtn('Export JSON', 'btn-secondary btn-sm editor-btn', function () {
+    actions.appendChild(makeBtn(t('ed.exportJson'), 'btn-secondary btn-sm editor-btn', function () {
       var id = (wc && wc.id) || 'template';
       downloadBlob(JSON.stringify(wc, null, 2), id + '.template.json', 'application/json');
     }));
@@ -350,7 +359,7 @@
     importInput.setAttribute('aria-hidden', 'true');
     actions.appendChild(importInput);
 
-    var importBtn = makeBtn('Import JSON', 'btn-secondary btn-sm editor-btn', function () {
+    var importBtn = makeBtn(t('ed.importJson'), 'btn-secondary btn-sm editor-btn', function () {
       importInput.value = '';
       importInput.click();
     });
@@ -386,7 +395,7 @@
     });
 
     // Register & use
-    actions.appendChild(makeBtn('Register & use', 'btn-primary btn-sm editor-btn', function () {
+    actions.appendChild(makeBtn(t('ed.registerUse'), 'btn-primary btn-sm editor-btn', function () {
       if (!window.OBS || !OBS.validate) return;
       var result = OBS.validate.validateTemplate(wc);
       if (!result.ok) {
@@ -420,7 +429,7 @@
       showValidationResult({
         ok: true,
         errors: [],
-        message: 'Template "' + wc.id + '" registered. Go to the Start tab to begin a new assessment with it.'
+        message: t('ed.registeredMsg1') + wc.id + t('ed.registeredMsg2')
       });
     }));
 
@@ -447,12 +456,12 @@
     if (result.ok) {
       el.className = 'editor-val-result editor-val-result--ok';
       var op = document.createElement('p');
-      op.textContent = 'Template is valid — all fields and languages look good.';
+      op.textContent = t('ed.valid');
       el.appendChild(op);
     } else {
       el.className = 'editor-val-result editor-val-result--error';
       var hp = document.createElement('p');
-      hp.textContent = 'Validation errors (' + result.errors.length + '):';
+      hp.textContent = t('ed.errorsPrefix') + result.errors.length + '):';
       el.appendChild(hp);
       var ul = document.createElement('ul');
       result.errors.forEach(function (err) {
@@ -472,7 +481,7 @@
     var fs = makeEl('fieldset', 'editor-fieldset');
     var legend = document.createElement('legend');
     legend.className = 'editor-legend';
-    legend.textContent = 'Template metadata';
+    legend.textContent = t('ed.metaSection');
     fs.appendChild(legend);
 
     var grid = makeEl('div', 'editor-meta-grid');
@@ -480,12 +489,12 @@
     var title = wc.title || {};
     var desc = wc.description || {};
 
-    makeField(grid, 'Template ID', makeTextInput('ed-id', 'id', wc.id || ''), 'ed-id');
-    makeField(grid, 'Version', makeTextInput('ed-version', 'version', wc.version || ''), 'ed-version');
-    makeField(grid, 'Title (EN)', makeTextInput('ed-title-en', 'title.en', title.en || ''), 'ed-title-en');
-    makeField(grid, 'Title (SQ)', makeTextInput('ed-title-sq', 'title.sq', title.sq || ''), 'ed-title-sq');
-    makeField(grid, 'Description (EN)', makeTextarea('ed-desc-en', 'description.en', desc.en || '', 3), 'ed-desc-en');
-    makeField(grid, 'Description (SQ)', makeTextarea('ed-desc-sq', 'description.sq', desc.sq || '', 3), 'ed-desc-sq');
+    makeField(grid, t('ed.templateId'), makeTextInput('ed-id', 'id', wc.id || ''), 'ed-id');
+    makeField(grid, t('ed.version'), makeTextInput('ed-version', 'version', wc.version || ''), 'ed-version');
+    makeField(grid, t('ed.titleEn'), makeTextInput('ed-title-en', 'title.en', title.en || ''), 'ed-title-en');
+    makeField(grid, t('ed.titleSq'), makeTextInput('ed-title-sq', 'title.sq', title.sq || ''), 'ed-title-sq');
+    makeField(grid, t('ed.descEn'), makeTextarea('ed-desc-en', 'description.en', desc.en || '', 3), 'ed-desc-en');
+    makeField(grid, t('ed.descSq'), makeTextarea('ed-desc-sq', 'description.sq', desc.sq || '', 3), 'ed-desc-sq');
 
     fs.appendChild(grid);
     section.appendChild(fs);
@@ -500,7 +509,7 @@
     // Section heading
     var headRow = makeEl('div', 'editor-section-heading');
     var h3 = document.createElement('h3');
-    h3.textContent = 'Domains';
+    h3.textContent = t('ed.domains');
     headRow.appendChild(h3);
     section.appendChild(headRow);
 
@@ -510,7 +519,7 @@
     });
 
     // Add domain button
-    var addDomainBtn = makeBtn('+ Add domain', 'editor-add-btn editor-add-domain-btn', function () {
+    var addDomainBtn = makeBtn(t('ed.addDomain'), 'editor-add-btn editor-add-domain-btn', function () {
       var states = captureOpenStates();
       if (!wc.domains) wc.domains = [];
       wc.domains.push(defaultDomain());
@@ -537,7 +546,7 @@
     var previewId = 'editor-domain-preview-' + di;
     var titlePreview = makeEl('span', 'editor-domain-summary__title');
     titlePreview.id = previewId;
-    titlePreview.textContent = (domain.title && domain.title.en) || '(unnamed domain)';
+    titlePreview.textContent = (domain.title && domain.title.en) || t('ed.unnamedDomain');
     summary.appendChild(titlePreview);
 
     // Move up/down
@@ -565,9 +574,9 @@
     summary.appendChild(moveBtns);
 
     // Delete domain
-    summary.appendChild(makeBtn('Delete', 'editor-icon-btn editor-icon-btn--danger', function (e) {
+    summary.appendChild(makeBtn(t('ed.delete'), 'editor-icon-btn editor-icon-btn--danger', function (e) {
       e.stopPropagation();
-      if (!confirm('Delete domain "' + ((domain.title && domain.title.en) || domain.id) + '"? All its questions will be lost.')) return;
+      if (!confirm(t('ed.confirmDelDomain1') + ((domain.title && domain.title.en) || domain.id) + t('ed.confirmDelDomain2'))) return;
       var states = captureOpenStates();
       wc.domains.splice(di, 1);
       rerender(states);
@@ -586,14 +595,14 @@
       (domain.title && domain.title.en) || '',
       previewId
     );
-    makeField(titleFields, 'Domain title (EN)', enTitleInp, 'ed-dom-' + di + '-title-en');
+    makeField(titleFields, t('ed.domTitleEn'), enTitleInp, 'ed-dom-' + di + '-title-en');
 
     var sqTitleInp = makeTextInput(
       'ed-dom-' + di + '-title-sq',
       'domains.' + di + '.title.sq',
       (domain.title && domain.title.sq) || ''
     );
-    makeField(titleFields, 'Domain title (SQ)', sqTitleInp, 'ed-dom-' + di + '-title-sq');
+    makeField(titleFields, t('ed.domTitleSq'), sqTitleInp, 'ed-dom-' + di + '-title-sq');
     body.appendChild(titleFields);
 
     // Questions
@@ -610,7 +619,7 @@
 
     var qHeading = makeEl('div', 'editor-questions-heading');
     var qh4 = document.createElement('h4');
-    qh4.textContent = 'Questions (' + ((domain.questions || []).length) + ')';
+    qh4.textContent = t('ed.questionsHeading') + ((domain.questions || []).length) + ')';
     qHeading.appendChild(qh4);
     wrap.appendChild(qHeading);
 
@@ -622,7 +631,7 @@
     wrap.appendChild(qList);
 
     // Add question button
-    wrap.appendChild(makeBtn('+ Add question', 'editor-add-btn', function () {
+    wrap.appendChild(makeBtn(t('ed.addQuestion'), 'editor-add-btn', function () {
       var states = captureOpenStates();
       if (!wc.domains[di].questions) wc.domains[di].questions = [];
       var newQ = defaultQuestion();
@@ -657,7 +666,7 @@
     var previewId = 'ed-q-preview-' + di + '-' + qi;
     var preview = makeEl('span', 'editor-question-summary__preview');
     preview.id = previewId;
-    preview.textContent = (q.text && q.text.en) || '(no text yet)';
+    preview.textContent = (q.text && q.text.en) || t('ed.noTextYet');
     summary.appendChild(preview);
 
     // Move up/down
@@ -683,11 +692,11 @@
     summary.appendChild(qMoveBtns);
 
     // Delete question
-    summary.appendChild(makeBtn('Delete', 'editor-icon-btn editor-icon-btn--danger', function (e) {
+    summary.appendChild(makeBtn(t('ed.delete'), 'editor-icon-btn editor-icon-btn--danger', function (e) {
       e.stopPropagation();
       var q = wc.domains[di].questions[qi];
       var label = (q && q.id) || ((q && q.text && q.text.en) || 'this question');
-      if (!confirm('Delete question "' + label + '"?')) return;
+      if (!confirm(t('ed.confirmDelQuestion1') + label + t('ed.confirmDelQuestion2'))) return;
       var states = captureOpenStates();
       wc.domains[di].questions.splice(qi, 1);
       rerender(states);
@@ -711,24 +720,24 @@
     idBadgeInput.addEventListener('input', function () {
       idBadge.textContent = idBadgeInput.value || '?';
     });
-    makeField(metaRow, 'Question ID', idBadgeInput, 'ed-q-' + qKey + '-id');
+    makeField(metaRow, t('ed.questionId'), idBadgeInput, 'ed-q-' + qKey + '-id');
 
     makeField(
-      metaRow, 'Kind',
+      metaRow, t('ed.kind'),
       makeSelect('ed-q-' + qKey + '-kind', basePath + '.kind',
-        [{ value: 'standard', label: 'Standard' }, { value: 'custom', label: 'Custom' }],
+        [{ value: 'standard', label: t('ed.standard') }, { value: 'custom', label: t('ed.custom') }],
         q.kind || 'standard'),
       'ed-q-' + qKey + '-kind'
     );
 
     makeField(
-      metaRow, 'Threat indicator (1-5)',
+      metaRow, t('ed.threatIndicator'),
       makeNumberInput('ed-q-' + qKey + '-ti', basePath + '.threatIndicator', q.threatIndicator, 1, 5),
       'ed-q-' + qKey + '-ti'
     );
 
     makeField(
-      metaRow, 'Weight',
+      metaRow, t('ed.weight'),
       makeNumberInput('ed-q-' + qKey + '-wt', basePath + '.weight', q.weight, 0),
       'ed-q-' + qKey + '-wt'
     );
@@ -738,7 +747,7 @@
     var critLbl = document.createElement('label');
     var critId = 'ed-q-' + qKey + '-crit';
     critLbl.setAttribute('for', critId);
-    critLbl.textContent = 'Critical';
+    critLbl.textContent = t('ed.critical');
     var critCb = document.createElement('input');
     critCb.type = 'checkbox';
     critCb.id = critId;
@@ -757,23 +766,23 @@
     enTextTa.addEventListener('input', function () {
       preview.textContent = enTextTa.value || '(no text yet)';
     });
-    makeField(textGrid, 'Question text (EN)', enTextTa, 'ed-q-' + qKey + '-text-en');
+    makeField(textGrid, t('ed.qTextEn'), enTextTa, 'ed-q-' + qKey + '-text-en');
 
     var sqTextTa = makeTextarea('ed-q-' + qKey + '-text-sq', basePath + '.text.sq', (q.text && q.text.sq) || '', 3);
-    makeField(textGrid, 'Question text (SQ)', sqTextTa, 'ed-q-' + qKey + '-text-sq');
+    makeField(textGrid, t('ed.qTextSq'), sqTextTa, 'ed-q-' + qKey + '-text-sq');
     body.appendChild(textGrid);
 
     // Good practice (collapsible)
     var gpDetails = document.createElement('details');
     gpDetails.className = 'editor-subsection';
     var gpSummary = document.createElement('summary');
-    gpSummary.textContent = 'Good practice (one item per line)';
+    gpSummary.textContent = t('ed.goodPractice');
     gpDetails.appendChild(gpSummary);
     var gpBody = makeEl('div', 'editor-subsection__body');
     var gpGrid = makeEl('div', 'editor-bi-grid');
     var gp = q.goodPractice || {};
-    makeField(gpGrid, 'Good practice (EN)', makeTextarea('ed-q-' + qKey + '-gp-en', basePath + '.goodPractice.en', gp.en || [], 5, true), 'ed-q-' + qKey + '-gp-en');
-    makeField(gpGrid, 'Good practice (SQ)', makeTextarea('ed-q-' + qKey + '-gp-sq', basePath + '.goodPractice.sq', gp.sq || [], 5, true), 'ed-q-' + qKey + '-gp-sq');
+    makeField(gpGrid, t('ed.gpEn'), makeTextarea('ed-q-' + qKey + '-gp-en', basePath + '.goodPractice.en', gp.en || [], 5, true), 'ed-q-' + qKey + '-gp-en');
+    makeField(gpGrid, t('ed.gpSq'), makeTextarea('ed-q-' + qKey + '-gp-sq', basePath + '.goodPractice.sq', gp.sq || [], 5, true), 'ed-q-' + qKey + '-gp-sq');
     gpBody.appendChild(gpGrid);
     gpDetails.appendChild(gpBody);
     body.appendChild(gpDetails);
@@ -782,14 +791,14 @@
     var refDetails = document.createElement('details');
     refDetails.className = 'editor-subsection';
     var refSummary = document.createElement('summary');
-    refSummary.textContent = 'Follow-up & References';
+    refSummary.textContent = t('ed.followupRefs');
     refDetails.appendChild(refSummary);
     var refBody = makeEl('div', 'editor-subsection__body');
 
     var fu = q.followUp || {};
     var fuGrid = makeEl('div', 'editor-bi-grid');
-    makeField(fuGrid, 'Follow-up prompt (EN)', makeTextarea('ed-q-' + qKey + '-fu-en', basePath + '.followUp.en', fu.en || '', 2), 'ed-q-' + qKey + '-fu-en');
-    makeField(fuGrid, 'Follow-up prompt (SQ)', makeTextarea('ed-q-' + qKey + '-fu-sq', basePath + '.followUp.sq', fu.sq || '', 2), 'ed-q-' + qKey + '-fu-sq');
+    makeField(fuGrid, t('ed.fuEn'), makeTextarea('ed-q-' + qKey + '-fu-en', basePath + '.followUp.en', fu.en || '', 2), 'ed-q-' + qKey + '-fu-en');
+    makeField(fuGrid, t('ed.fuSq'), makeTextarea('ed-q-' + qKey + '-fu-sq', basePath + '.followUp.sq', fu.sq || '', 2), 'ed-q-' + qKey + '-fu-sq');
     refBody.appendChild(fuGrid);
 
     // References
