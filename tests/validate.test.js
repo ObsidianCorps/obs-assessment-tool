@@ -39,3 +39,15 @@ test('duplicate question ids fail', function () {
   t.domains[0].questions.push(Object.assign({}, t.domains[0].questions[0]));
   assert.strictEqual(validate.validateTemplate(t).ok, false);
 });
+test('followUp missing language fails', function () {
+  const t = goodTemplate();
+  delete t.domains[0].questions[0].followUp.sq;
+  const r = validate.validateTemplate(t);
+  assert.strictEqual(r.ok, false);
+  assert.ok(r.errors.some((e) => e.indexOf('Q1') >= 0 && e.indexOf('sq') >= 0));
+});
+test('maturityLevels item missing min fails', function () {
+  const t = goodTemplate();
+  delete t.maturityLevels[0].min;
+  assert.strictEqual(validate.validateTemplate(t).ok, false);
+});

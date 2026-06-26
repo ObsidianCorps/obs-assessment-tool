@@ -18,7 +18,16 @@
     if (typeof t.version !== 'string') errors.push('version must be a string');
     var langs = Array.isArray(t.languages) ? t.languages : [];
     if (!langs.length) errors.push('languages must be a non-empty array');
-    if (!Array.isArray(t.maturityLevels) || !t.maturityLevels.length) errors.push('maturityLevels required');
+    if (!Array.isArray(t.maturityLevels) || !t.maturityLevels.length) {
+      errors.push('maturityLevels required');
+    } else {
+      t.maturityLevels.forEach(function (ml, i) {
+        if (typeof ml.level !== 'number') errors.push('maturityLevels[' + i + '].level must be numeric');
+        if (ml.label == null) errors.push('maturityLevels[' + i + '].label required');
+        if (typeof ml.min !== 'number') errors.push('maturityLevels[' + i + '].min must be numeric');
+        if (typeof ml.max !== 'number') errors.push('maturityLevels[' + i + '].max must be numeric');
+      });
+    }
     if (!Array.isArray(t.domains) || !t.domains.length) errors.push('domains required');
     var seen = {};
     (t.domains || []).forEach(function (d, di) {
@@ -33,6 +42,7 @@
         if (q.weight != null && typeof q.weight !== 'number') errors.push(q.id + ' weight must be numeric');
         hasAllLangs(q.text, langs, q.id + ' text', errors);
         hasAllLangs(q.goodPractice, langs, q.id + ' goodPractice', errors);
+        if (q.followUp != null) hasAllLangs(q.followUp, langs, q.id + ' followUp', errors);
         if (q.references == null || typeof q.references !== 'object') errors.push(q.id + ' references required');
       });
     });
