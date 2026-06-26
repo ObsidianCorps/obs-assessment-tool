@@ -121,8 +121,12 @@
       OBS.app.renderQuestionnaire();
     }
     if (typeof OBS.report !== 'undefined' &&
-        typeof OBS.report.renderDashboard === 'function') {
-      OBS.report.renderDashboard();
+        typeof OBS.report.renderDashboard === 'function' &&
+        app.assessment) {
+      var dashPanel = document.getElementById('dashboard-main');
+      if (dashPanel) {
+        OBS.report.renderDashboard(dashPanel, app.template, app.assessment, app.lang);
+      }
     }
   }
 
@@ -951,7 +955,17 @@
     var tabBtns = document.querySelectorAll('[role="tab"]');
     for (var ti = 0; ti < tabBtns.length; ti++) {
       tabBtns[ti].addEventListener('click', function () {
-        showTab(this.getAttribute('data-tab'));
+        var tabName = this.getAttribute('data-tab');
+        showTab(tabName);
+        if (tabName === 'dashboard' &&
+            typeof OBS.report !== 'undefined' &&
+            typeof OBS.report.renderDashboard === 'function' &&
+            app.assessment) {
+          var dashPanel = document.getElementById('dashboard-main');
+          if (dashPanel) {
+            OBS.report.renderDashboard(dashPanel, app.template, app.assessment, app.lang);
+          }
+        }
       });
     }
 
