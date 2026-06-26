@@ -3,6 +3,18 @@
 
   window.OBS_CHANGELOG = [
     {
+      version: '1.4.0',
+      date: '2026-06-26',
+      changes: [
+        'Security: a locked encrypted draft is never silently overwritten with plaintext; draft encryption now uses 600,000 PBKDF2 iterations and requires an 8+ character password',
+        'Security: hardened Content-Security-Policy, added HSTS and Permissions-Policy headers, and recorded integrity hashes for the bundled libraries',
+        'Accessibility: chart descriptions for screen readers, full keyboard tab navigation, reduced-motion support, stronger colour contrast, and clearer disabled/focus states',
+        'Mobile: domain navigation and all toolbar actions (Import / Export / Encrypt) now stay reachable on small screens',
+        'Fixed the maturity rating for scores on a band boundary; CSV export now includes custom questions',
+        'The draft-encryption dialogs and all remaining interface text are now fully translated (EN/SQ)'
+      ]
+    },
+    {
       version: '1.3.0',
       date: '2026-06-26',
       changes: [
