@@ -29,3 +29,10 @@ test('all question ids are unique', function () {
     });
   });
 });
+test('template is valid with both en and sq languages', function () {
+  const r = validate.validateTemplate(t);
+  assert.strictEqual(r.ok, true, JSON.stringify(r.errors));
+});
+test('Albanian translation is flagged as machine-draft', function () {
+  assert.strictEqual(t.translationStatus.sq, 'machine-draft');
+});
